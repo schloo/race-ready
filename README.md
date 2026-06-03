@@ -2,7 +2,7 @@
 
 A marathon training planner built on the Daniels 2Q methodology. Plan each week around two quality workouts with easy mileage filling the volume — no junk miles. Tracks weekly targets, WoW ramp rate, and acute:chronic workload ratio (ACR) per day.
 
-**Live app:** *(add your Netlify URL here after first deploy)*
+**Live app:** [raceready2q.netlify.app](https://raceready2q.netlify.app)
 
 ---
 
