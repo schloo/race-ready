@@ -283,12 +283,14 @@ body {
 /* Target cell */
 /* Weekly target — single row: label left, number right */
 .q-target-cell {
-  padding: 8px 12px;
+  padding: 7px 10px;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 6px;
   background: #fff;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
 }
 .q-target-hdr {
   font-size: 10px;
@@ -326,11 +328,14 @@ body {
 .editable-cell .q-prescription:focus { background: #fafbfd; }
 
 .q-cell {
-  padding: 8px 12px;
+  padding: 7px 10px;
   font-size: 11px;
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: 1.4;
   background: #fff;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  flex: 1;
 }
 /* Q cells stack vertically inside q-column; top border handled by q-column > * + * */
 
@@ -397,7 +402,7 @@ body {
   overflow: hidden;
 }
 
-/* Q column on the left: target / Q1 / Q2 stacked vertically */
+/* Q column on the left: target / Q1 / Q2 stacked as tiles */
 .q-column {
   display: flex;
   flex-direction: column;
@@ -405,9 +410,10 @@ body {
   min-width: 220px;
   flex-shrink: 0;
   border-right: 0.5px solid var(--cool-border);
-  background: #fff;
+  background: var(--cool-bg);
+  padding: 8px;
+  gap: 6px;
 }
-.q-column > * + * { border-top: 0.5px solid var(--cool-border); }
 
 /* Grid row fills remaining space */
 .week-grid-row {
