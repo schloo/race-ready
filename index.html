@@ -214,7 +214,7 @@ body {
 .wr-chev  { color: var(--text-tertiary); font-size: 13px; flex-shrink: 0; }
 .wr-num   { font-size: 13px; font-weight: 500; width: 76px; flex-shrink: 0; }
 .wr-dates { font-size: 11px; color: var(--text-tertiary); width: 88px; flex-shrink: 0; }
-.wr-phase { font-size: 11px; color: var(--text-secondary); width: 130px; flex-shrink: 0; }
+.wr-phase { font-size: 11px; color: var(--text-secondary); width: 180px; flex-shrink: 0; }
 .wr-mi    { font-size: 11px; color: var(--text-secondary); flex: 1; }
 
 /* ACR pill */
@@ -292,7 +292,7 @@ body {
 }
 .q-target-lbl { font-size: 10px; color: var(--text-tertiary); }
 .q-target-input {
-  font-size: 28px;
+  font-size: 18px;
   font-weight: 500;
   font-family: var(--font-sans);
   color: var(--text-primary);
@@ -337,14 +337,13 @@ body {
   margin-bottom: 4px;
 }
 
-/* Q day assignment row */
-.q-day-row {
+/* Q label row — chip + "assigned to" select on same line */
+.q-label-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 0.5px solid var(--cool-border);
+  margin-bottom: 5px;
+  flex-wrap: nowrap;
 }
 .q-day-lbl { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
 .q-day-select {
@@ -379,6 +378,10 @@ body {
 .week-inner {
   display: grid;
   grid-template-columns: 1fr 164px;
+  margin: 10px 12px 12px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .grid-pane {
@@ -1707,7 +1710,7 @@ function buildCollapsedRow(wk, dailyMap) {
     <i class="ti ti-chevron-right wr-chev"></i>
     <span class="wr-num">Week T-${wk.week_number}</span>
     <span class="wr-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
-    <span class="wr-phase">${locAbbrev}</span>
+    <span class="wr-phase">${locAbbrev} <span style="color:var(--text-tertiary);font-weight:400">·</span> ${wk.phase}</span>
     <span class="wr-mi">${miStr}</span>
     <span class="acr-pill ${acrCls}">${acrStr}</span>
   `;
@@ -1809,16 +1812,22 @@ function buildOpenWeekBlock(wk, dailyMap) {
       <div class="q-target-lbl">mi weekly target</div>
     </div>
     <div class="q-cell editable-cell">
-      <div><span class="qlbl">Q1</span></div>
+      <div class="q-label-row">
+        <span class="qlbl">Q1</span>
+        <span class="q-day-lbl">→</span>
+        ${daySelectHTML('Q1', q1Day)}
+      </div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription"
         placeholder="Q1 workout prescription…">${escHtml(wk.q1_prescription||'')}</textarea>
-      <div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q1', q1Day)}</div>
     </div>
     <div class="q-cell editable-cell">
-      <div><span class="qlbl">Q2</span></div>
+      <div class="q-label-row">
+        <span class="qlbl">Q2</span>
+        <span class="q-day-lbl">→</span>
+        ${daySelectHTML('Q2', q2Day)}
+      </div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription"
         placeholder="Q2 workout prescription…">${escHtml(wk.q2_prescription||'')}</textarea>
-      <div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q2', q2Day)}</div>
     </div>
   `;
 
