@@ -322,8 +322,6 @@ body {
   color: var(--text-secondary);
   line-height: 1.7;
   background: #fff;
-  display: flex;
-  flex-direction: column;
 }
 /* Q cells stack vertically inside q-column; top border handled by q-column > * + * */
 
@@ -340,17 +338,13 @@ body {
   margin-bottom: 4px;
 }
 
-/* Q label row — just the chip at top */
-.q-label-row { margin-bottom: 5px; }
-
-/* Day assignment row — anchored to bottom of cell */
-.q-day-row {
+/* Q label row — chip + day select inline */
+.q-label-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: auto;
-  padding-top: 6px;
-  border-top: 0.5px solid var(--cool-border);
+  gap: 5px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
 }
 .q-day-lbl { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
 .q-day-select {
@@ -394,17 +388,17 @@ body {
   overflow: hidden;
 }
 
-/* Q panel on the left: target | Q1 | Q2 horizontally */
+/* Q column on the left: target / Q1 / Q2 stacked vertically */
 .q-column {
-  display: grid;
-  grid-template-columns: 90px 1fr 1fr;
-  width: 340px;
-  min-width: 340px;
+  display: flex;
+  flex-direction: column;
+  width: 220px;
+  min-width: 220px;
   flex-shrink: 0;
   border-right: 0.5px solid var(--cool-border);
   background: #fff;
 }
-.q-column > * + * { border-left: 0.5px solid var(--cool-border); }
+.q-column > * + * { border-top: 0.5px solid var(--cool-border); }
 
 /* Grid row fills remaining space */
 .week-grid-row {
@@ -425,11 +419,10 @@ body {
 .cal-grid {
   width: 100%;
   border-collapse: collapse;
-  min-width: 480px;
   table-layout: fixed;
 }
-.cal-grid colgroup col.rl-col  { width: 88px; }
-.cal-grid colgroup col.day-col { width: calc((100% - 88px) / 7); }
+.cal-grid colgroup col.rl-col  { width: 58px; }
+.cal-grid colgroup col.day-col { width: calc((100% - 58px) / 7); }
 
 .cal-grid th {
   font-size: 11px;
@@ -456,13 +449,13 @@ body {
 .cal-grid tr:last-child td { border-bottom: none; }
 .cal-grid td.rl {
   text-align: left;
-  font-size: 11px;
-  padding: 2px 10px 2px 6px;
+  font-size: 10px;
+  padding: 2px 4px 2px 4px;
   background: #fff;
 }
 
-.day-head-name { font-size: 11px; font-weight: 500; }
-.day-head-date { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+.day-head-name { font-size: 10px; font-weight: 500; }
+.day-head-date { font-size: 9px; color: var(--text-tertiary); margin-top: 1px; }
 .day-q-chip {
   display: inline-block;
   font-size: 9px;
@@ -479,10 +472,14 @@ body {
 /* Pace row labels */
 .pace-lbl {
   display: inline-block;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 54px;
   white-space: nowrap;
 }
 .pace-lbl.E { background: var(--e-bg); color: #1a1a1a; }
@@ -601,6 +598,9 @@ body {
 
 /* ── Summary panel ── */
 .summary-pane {
+  width: 164px;
+  min-width: 164px;
+  flex-shrink: 0;
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -1903,18 +1903,16 @@ function buildOpenWeekBlock(wk, dailyMap) {
       </div>
     </div>
     <div class="q-cell ${isNoQ ? '' : 'editable-cell'}">
-      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q1</span></div>`}
+      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q1</span><span class="q-day-lbl">→</span>${daySelectHTML('Q1', q1Day)}</div>`}
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription"
         ${isNoQ ? 'readonly style="color:var(--text-tertiary)"' : ''}
         placeholder="Q1 workout prescription…">${escHtml(q1Text)}</textarea>
-      ${isNoQ ? '' : `<div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q1', q1Day)}</div>`}
     </div>
     <div class="q-cell ${isNoQ ? '' : 'editable-cell'}">
-      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q2</span></div>`}
+      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q2</span><span class="q-day-lbl">→</span>${daySelectHTML('Q2', q2Day)}</div>`}
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription"
         ${isNoQ ? 'readonly style="color:var(--text-tertiary)"' : ''}
         placeholder="Q2 workout prescription…">${escHtml(q2Text)}</textarea>
-      ${isNoQ ? '' : `<div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q2', q2Day)}</div>`}
     </div>
   `;
 
