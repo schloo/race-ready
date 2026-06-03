@@ -1,1 +1,1 @@
-# Marathon Training Planner
+# RaceReady
