@@ -1,0 +1,2582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marathon Planner</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Design tokens ── */
+:root {
+  --cool-bg:      #f4f6f9;
+  --cool-border:  #e4e8ee;
+  --text-primary:   #1a1a1a;
+  --text-secondary: #555;
+  --text-tertiary:  #999;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+
+  /* Pace colors */
+  --e-bg: #EAF3DE; --e-text: #27500A; --e-border: #C0DD97;
+  --m-bg: #E6F1FB; --m-text: #0C447C; --m-border: #B5D4F4;
+  --t-bg: #FAEEDA; --t-text: #633806; --t-border: #FAC775;
+  --i-bg: #FCEBEB; --i-text: #791F1F; --i-border: #F7C1C1;
+  --r-bg: #EEEDFE; --r-text: #26215C; --r-border: #CECBF6;
+
+  /* Q tag */
+  --q-bg: #1a1f2e; --q-text: #8aacce; --q-border: #2e3f68;
+
+  /* ACR zone colors */
+  --acr-purple-bg: #EEEDFE; --acr-purple-text: #3C3489;
+  --acr-blue-bg:   #E6F1FB; --acr-blue-text:   #185FA5;
+  --acr-green-bg:  #EAF3DE; --acr-green-text:  #3B6D11;
+  --acr-orange-bg: #FAEEDA; --acr-orange-text: #854F0B;
+  --acr-red-bg:    #FCEBEB; --acr-red-text:    #A32D2D;
+}
+
+/* ── Base ── */
+body {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--cool-bg);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Topbar ── */
+#topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #fff;
+  border-bottom: 0.5px solid var(--cool-border);
+  gap: 12px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.plan-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.plan-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.plan-subtitle .edit-icon {
+  color: var(--text-tertiary);
+  opacity: 0.5;
+  cursor: pointer;
+  font-size: 11px;
+}
+.plan-subtitle .edit-icon:hover { opacity: 1; }
+
+/* Pace chip group */
+.pace-chip-group {
+  display: flex;
+  align-items: center;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.pace-chip {
+  font-size: 11px;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  border-right: 0.5px solid var(--cool-border);
+}
+.pace-chip:last-of-type { border-right: none; }
+.pace-chip.E { background: var(--e-bg); color: var(--e-text); }
+.pace-chip.M { background: var(--m-bg); color: var(--m-text); }
+.pace-chip.T { background: var(--t-bg); color: var(--t-text); }
+.pace-chip.I { background: var(--i-bg); color: var(--i-text); }
+.pace-chip.R { background: var(--r-bg); color: var(--r-text); }
+
+.pace-edit-btn {
+  padding: 3px 7px;
+  background: var(--cool-bg);
+  color: var(--text-tertiary);
+  border-left: 0.5px solid var(--cool-border);
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  cursor: pointer;
+}
+.pace-edit-btn:hover { color: var(--text-primary); }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Settings key button */
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+}
+.icon-btn:hover { background: var(--cool-bg); }
+
+/* Ramp button */
+.ramp-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--font-sans);
+}
+.ramp-btn:hover { background: var(--cool-bg); }
+
+/* ── Main scroll area ── */
+#main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* ── Collapsed week row ── */
+.week-row {
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  background: #fff;
+  user-select: none;
+  flex-shrink: 0;
+}
+.week-row:hover { background: var(--cool-bg); }
+.week-row.past { opacity: 0.5; }
+
+.wr-chev  { color: var(--text-tertiary); font-size: 13px; flex-shrink: 0; }
+.wr-num   { font-size: 12px; font-weight: 500; width: 72px; flex-shrink: 0; }
+.wr-dates { font-size: 11px; color: var(--text-tertiary); width: 88px; flex-shrink: 0; }
+.wr-phase { font-size: 11px; color: var(--text-secondary); width: 130px; flex-shrink: 0; }
+.wr-mi    { font-size: 11px; color: var(--text-secondary); flex: 1; }
+
+/* ACR pill */
+.acr-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.acr-pill.dim    { background: var(--cool-bg); color: var(--text-tertiary); }
+.acr-pill.purple { background: var(--acr-purple-bg); color: var(--acr-purple-text); }
+.acr-pill.blue   { background: var(--acr-blue-bg);   color: var(--acr-blue-text); }
+.acr-pill.green  { background: var(--acr-green-bg);  color: var(--acr-green-text); }
+.acr-pill.orange { background: var(--acr-orange-bg); color: var(--acr-orange-text); }
+.acr-pill.red    { background: var(--acr-red-bg);    color: var(--acr-red-text); }
+
+/* ── Open week block ── */
+.week-block {
+  border: 0.5px solid var(--cool-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+/* Week block header */
+.wbh {
+  padding: 7px 12px;
+  background: var(--cool-bg);
+  border-bottom: 0.5px solid var(--cool-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.wbh-num   { font-size: 13px; font-weight: 500; white-space: nowrap; }
+.wbh-sep   { color: var(--cool-border); }
+.wbh-dates { font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+.wbh-acr   { margin-left: auto; }
+
+.loc-select {
+  font-size: 11px;
+  padding: 0 14px 0 0;
+  border: none;
+  border-bottom: 0.5px dashed var(--cool-border);
+  color: var(--text-tertiary);
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4'%3E%3Cpath d='M0 0l3.5 4L7 0z' fill='%23bbb'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1px center;
+  outline: none;
+}
+
+/* Goal row (3 equal columns) */
+.q-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 0.5px solid var(--cool-border);
+}
+
+.q-context {
+  padding: 8px 12px;
+  border-right: 0.5px solid var(--cool-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  background: var(--cool-bg);
+}
+.q-phase-name { font-size: 12px; font-weight: 500; }
+.q-phase-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; margin-top: 2px; }
+.q-target     { font-size: 13px; font-weight: 500; }
+.q-target-lbl { font-size: 10px; color: var(--text-tertiary); }
+
+.q-cell {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  background: #fff;
+}
+.q-cell:not(:last-child) { border-right: 0.5px solid var(--cool-border); }
+
+.qlbl {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--q-bg);
+  color: var(--q-text);
+  margin-bottom: 4px;
+}
+
+/* Prescription textarea */
+.q-prescription {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-family: var(--font-sans);
+  resize: none;
+  outline: none;
+  min-height: 60px;
+  white-space: pre-wrap;
+}
+
+/* ── Week inner: grid + summary panel ── */
+.week-inner {
+  display: grid;
+  grid-template-columns: 1fr 164px;
+}
+
+.grid-pane {
+  overflow-x: auto;
+  border-right: 0.5px solid var(--cool-border);
+}
+
+/* ── Calendar grid table ── */
+.cal-grid {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+  table-layout: fixed;
+}
+.cal-grid colgroup col.rl-col  { width: 68px; }
+.cal-grid colgroup col.day-col { width: calc((100% - 68px) / 7); }
+
+.cal-grid th {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 5px 4px;
+  text-align: center;
+  border-bottom: 0.5px solid var(--cool-border);
+  border-right: 0.5px solid var(--cool-border);
+  background: #fff;
+}
+.cal-grid th:last-child { border-right: none; }
+.cal-grid th.rl { text-align: left; background: var(--cool-bg); font-size: 10px; }
+
+.cal-grid td {
+  padding: 3px;
+  border-bottom: 0.5px solid var(--cool-border);
+  border-right: 0.5px solid var(--cool-border);
+  text-align: center;
+  vertical-align: middle;
+  background: #fff;
+}
+.cal-grid td:last-child { border-right: none; }
+.cal-grid tr:last-child td { border-bottom: none; }
+.cal-grid td.rl {
+  text-align: left;
+  font-size: 11px;
+  padding: 2px 6px;
+  background: var(--cool-bg);
+}
+
+.day-head-name { font-size: 11px; font-weight: 500; }
+.day-head-date { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+
+/* Pace row labels */
+.pace-lbl {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.pace-lbl.E { background: var(--e-bg); color: var(--e-text); }
+.pace-lbl.M { background: var(--m-bg); color: var(--m-text); }
+.pace-lbl.T { background: var(--t-bg); color: var(--t-text); }
+.pace-lbl.I { background: var(--i-bg); color: var(--i-text); }
+.pace-lbl.R { background: var(--r-bg); color: var(--r-text); }
+.pace-lbl.tot {
+  background: #fff;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border: 0.5px solid var(--cool-border);
+}
+
+/* Pace inputs */
+.pace-input {
+  width: 36px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 4px;
+  padding: 2px 2px;
+  font-size: 11px;
+  text-align: right;
+  background: #fff;
+  font-family: var(--font-sans);
+}
+.pace-input:focus { outline: none; border-color: #aaa; }
+.pace-input.E { color: var(--e-text); border-color: var(--e-border); }
+.pace-input.M { color: var(--m-text); border-color: var(--m-border); }
+.pace-input.T { color: var(--t-text); border-color: var(--t-border); }
+.pace-input.I { color: var(--i-text); border-color: var(--i-border); }
+.pace-input.R { color: var(--r-text); border-color: var(--r-border); }
+
+/* Total row */
+.tot-row td {
+  background: var(--cool-bg) !important;
+  font-weight: 500;
+  font-size: 12px;
+}
+.tot-row td.tot-val { background: #fff !important; }
+
+/* ACR row */
+.acr-row td.rl { background: var(--cool-bg) !important; font-size: 11px; color: var(--text-secondary); }
+.acr-cell { font-size: 11px; font-weight: 500; }
+.acr-cell.purple { background: var(--acr-purple-bg) !important; color: var(--acr-purple-text); }
+.acr-cell.blue   { background: var(--acr-blue-bg)   !important; color: var(--acr-blue-text); }
+.acr-cell.green  { background: var(--acr-green-bg)  !important; color: var(--acr-green-text); }
+.acr-cell.orange { background: var(--acr-orange-bg) !important; color: var(--acr-orange-text); }
+.acr-cell.red    { background: var(--acr-red-bg)    !important; color: var(--acr-red-text); }
+
+/* Tags row */
+.tag-cell { padding: 3px; vertical-align: top; }
+.tag-stack { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tag-group { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
+
+.tag {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  border: 0.5px solid var(--cool-border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  background: #fff;
+  user-select: none;
+}
+.tag.Q { background: var(--q-bg); color: var(--q-text); border-color: var(--q-border); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.tag.activity { background: var(--cool-bg); }
+.tag.plus { color: var(--text-tertiary); border-style: dashed; }
+.tag:hover .tag-x { display: inline; }
+.tag-x { display: none; margin-left: 2px; font-size: 9px; }
+
+/* ── Summary panel ── */
+.summary-pane {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+}
+
+.sum-tile {
+  border-radius: 8px;
+  padding: 7px 10px;
+  border: 0.5px solid transparent;
+}
+.sum-tile.green  { background: var(--e-bg);  border-color: var(--e-border); }
+.sum-tile.orange { background: var(--t-bg);  border-color: var(--t-border); }
+.sum-tile.red    { background: var(--i-bg);  border-color: var(--i-border); }
+.sum-tile.neutral{ background: var(--cool-bg); border-color: var(--cool-border); }
+
+.st-val { font-size: 18px; font-weight: 500; line-height: 1; }
+.st-val.green  { color: var(--e-text); }
+.st-val.orange { color: var(--t-text); }
+.st-val.red    { color: var(--i-text); }
+.st-val.neutral{ color: var(--text-primary); }
+
+.st-lbl { font-size: 11px; margin-top: 2px; }
+.st-lbl.green  { color: var(--acr-green-text); }
+.st-lbl.orange { color: var(--acr-orange-text); }
+.st-lbl.red    { color: var(--acr-red-text); }
+.st-lbl.neutral{ color: var(--text-secondary); }
+
+.mix-wrap { margin-top: 2px; }
+.mix-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.mix-bar {
+  display: flex;
+  height: 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--cool-border);
+}
+.mix-legend { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+.mix-legend-item { font-size: 10px; color: var(--text-secondary); }
+.mix-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+/* ── Popovers ── */
+.popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+}
+.popover-backdrop.open { display: block; }
+
+.popover {
+  position: absolute;
+  background: #fff;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 12px;
+  overflow: hidden;
+  width: 380px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  z-index: 101;
+}
+
+.popover-header {
+  padding: 8px 14px;
+  background: var(--cool-bg);
+  border-bottom: 0.5px solid var(--cool-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.popover-title {
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.popover-close {
+  border: none;
+  background: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+}
+.popover-close:hover { color: var(--text-primary); }
+
+.popover-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pop-divider { height: 0.5px; background: var(--cool-border); }
+.pop-sec-lbl {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 4px;
+  border-bottom: 0.5px solid var(--cool-border);
+}
+
+.pop-field { display: flex; flex-direction: column; gap: 4px; }
+.pop-label { font-size: 11px; color: var(--text-secondary); }
+.pop-sublabel { font-size: 10px; color: var(--text-tertiary); line-height: 1.4; }
+
+.pop-input {
+  font-size: 12px;
+  padding: 5px 8px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+.pop-input:focus { outline: none; border-color: #aaa; }
+.pop-input.full { width: 100%; }
+.pop-input.narrow { width: 80px; }
+
+.pop-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pop-row-field { display: flex; align-items: center; gap: 6px; }
+
+.pop-derived {
+  background: var(--cool-bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.pop-d-val { font-size: 12px; font-weight: 500; }
+.pop-d-lbl { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+
+.pop-warn {
+  font-size: 11px;
+  padding: 6px 10px;
+  background: var(--t-bg);
+  border-radius: 8px;
+  color: var(--acr-orange-text);
+  border: 0.5px solid var(--t-border);
+  line-height: 1.5;
+}
+
+.pop-textarea {
+  font-size: 12px;
+  padding: 7px 9px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-primary);
+  width: 100%;
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.6;
+  font-family: var(--font-sans);
+}
+.pop-textarea:focus { outline: none; }
+
+.pop-hint {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  padding: 5px 8px;
+  background: var(--cool-bg);
+  border-radius: 8px;
+  border-left: 2px solid var(--cool-border);
+}
+
+.pop-select {
+  font-size: 11px;
+  padding: 3px 24px 3px 7px;
+  border-radius: 8px;
+  border: 0.5px solid var(--cool-border);
+  color: var(--text-primary);
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23999'/%3E%3C/svg%3E") no-repeat right 6px center;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  cursor: pointer;
+}
+.pop-select:focus { outline: none; }
+
+.pop-apply-note { font-size: 10px; color: var(--text-tertiary); }
+
+.pop-action-row { display: flex; align-items: center; gap: 8px; }
+.pop-btn {
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: 0.5px solid var(--cool-border);
+  background: #fff;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-sans);
+}
+.pop-btn:hover { background: var(--cool-bg); }
+.pop-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pop-btn-note { font-size: 11px; color: var(--text-tertiary); }
+
+.pop-error {
+  font-size: 11px;
+  padding: 6px 10px;
+  background: var(--i-bg);
+  border-radius: 8px;
+  color: var(--acr-red-text);
+  border: 0.5px solid var(--i-border);
+  line-height: 1.5;
+  display: none;
+}
+.pop-error.visible { display: block; }
+
+/* Pace editor table */
+.pace-editor-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.pace-editor-table th {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  border-bottom: 0.5px solid var(--cool-border);
+  text-align: left;
+}
+.pace-editor-table th.right { text-align: right; }
+.pace-editor-table td {
+  padding: 6px 8px;
+  border-bottom: 0.5px solid var(--cool-border);
+  vertical-align: middle;
+}
+.pace-editor-table tr:last-child td { border-bottom: none; }
+.pace-chip-sm {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  display: inline-block;
+  text-align: center;
+}
+.pace-chip-sm.E { background: var(--e-bg); color: var(--e-text); }
+.pace-chip-sm.M { background: var(--m-bg); color: var(--m-text); }
+.pace-chip-sm.T { background: var(--t-bg); color: var(--t-text); }
+.pace-chip-sm.I { background: var(--i-bg); color: var(--i-text); }
+.pace-chip-sm.R { background: var(--r-bg); color: var(--r-text); }
+.pace-pace-input {
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 4px;
+  width: 64px;
+  text-align: right;
+  font-family: var(--font-mono);
+  background: #fff;
+  color: var(--text-primary);
+}
+.pace-pace-input:focus { outline: none; }
+
+/* API key popover */
+.apikey-note { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+/* ── Loading / empty states ── */
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  font-size: 13px;
+  color: var(--text-secondary);
+  gap: 8px;
+}
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--cool-border);
+  border-top-color: var(--text-secondary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── MOBILE ── */
+@media (max-width: 640px) {
+  /* Hide desktop elements */
+  .pace-chip-group { display: none; }
+  .ramp-btn span { display: none; }
+  .ramp-btn { padding: 0; width: 30px; height: 30px; justify-content: center; }
+  #main { padding: 0; gap: 0; overflow: hidden; }
+
+  /* Mobile topbar */
+  #topbar { padding: 10px 14px 8px; flex-direction: column; align-items: stretch; gap: 0; }
+  .topbar-left { justify-content: space-between; }
+  .plan-title  { font-size: 13px; }
+
+  /* Pace strip (mobile) */
+  #mobile-pace-strip {
+    display: flex;
+    border-bottom: 0.5px solid var(--cool-border);
+    border-top: 0.5px solid var(--cool-border);
+  }
+  .m-pace-chip {
+    flex: 1;
+    font-size: 10px;
+    padding: 4px 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    border-right: 0.5px solid var(--cool-border);
+    cursor: pointer;
+  }
+  .m-pace-chip:last-child { border-right: none; }
+  .m-pace-chip.E { background: var(--e-bg); color: var(--e-text); }
+  .m-pace-chip.M { background: var(--m-bg); color: var(--m-text); }
+  .m-pace-chip.T { background: var(--t-bg); color: var(--t-text); }
+  .m-pace-chip.I { background: var(--i-bg); color: var(--i-text); }
+  .m-pace-chip.R { background: var(--r-bg); color: var(--r-text); }
+
+  /* Mobile week view (one week at a time) */
+  #mobile-view { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+  #desktop-view { display: none; }
+
+  /* Week nav bar */
+  .m-week-nav {
+    padding: 7px 14px;
+    border-bottom: 0.5px solid var(--cool-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    flex-shrink: 0;
+  }
+  .m-nav-arrow {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 2px 6px;
+    user-select: none;
+  }
+  .m-nav-arrow:hover { color: var(--text-primary); }
+  .m-nav-center { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .m-nav-num   { font-size: 12px; font-weight: 500; }
+  .m-nav-dates { font-size: 10px; color: var(--text-tertiary); }
+  .m-nav-phase { font-size: 10px; color: var(--text-secondary); }
+
+  /* Summary strip */
+  .m-summary {
+    border-bottom: 0.5px solid var(--cool-border);
+    background: var(--cool-bg);
+    flex-shrink: 0;
+  }
+  .m-stats { display: flex; padding: 6px 0 4px; }
+  .m-stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 0.5px solid var(--cool-border);
+  }
+  .m-stat-item:last-child { border-right: none; }
+  .m-stat-val { font-size: 12px; font-weight: 500; }
+  .m-stat-lbl { font-size: 9px; color: var(--text-tertiary); margin-top: 1px; text-align: center; line-height: 1.3; }
+  .m-mix-row {
+    padding: 4px 10px 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 0.5px solid var(--cool-border);
+  }
+  .m-mix-bar { flex: 1; display: flex; height: 5px; border-radius: 3px; overflow: hidden; background: var(--cool-border); }
+  .m-mix-legend { display: flex; gap: 4px; }
+  .m-mix-item { font-size: 9px; color: var(--text-secondary); white-space: nowrap; }
+  .m-mix-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 1px; }
+
+  /* Day rows */
+  .m-days { flex: 1; overflow-y: auto; }
+  .m-day-row {
+    border-bottom: 0.5px solid var(--cool-border);
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #fff;
+  }
+  .m-day-row.today { background: #f0f4ff; }
+  .m-day-header { display: flex; align-items: center; justify-content: space-between; }
+  .m-day-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .m-day-name { font-size: 12px; font-weight: 500; }
+  .m-day-date { font-size: 11px; color: var(--text-tertiary); }
+  .m-day-tags { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+  .m-day-acr  { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+  .m-day-acr.green  { background: var(--acr-green-bg);  color: var(--acr-green-text); }
+  .m-day-acr.orange { background: var(--acr-orange-bg); color: var(--acr-orange-text); }
+  .m-day-acr.red    { background: var(--acr-red-bg);    color: var(--acr-red-text); }
+  .m-day-acr.blue   { background: var(--acr-blue-bg);   color: var(--acr-blue-text); }
+  .m-day-acr.purple { background: var(--acr-purple-bg); color: var(--acr-purple-text); }
+
+  .m-q-hint {
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    padding: 4px 8px;
+    background: var(--cool-bg);
+    border-radius: 8px;
+    border-left: 2px solid var(--q-border);
+  }
+
+  /* Mobile pace input table */
+  .m-pace-table { width: 100%; border-collapse: collapse; }
+  .m-pace-table th {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 0;
+    text-align: center;
+    border-bottom: 0.5px solid var(--cool-border);
+    border-radius: 3px;
+  }
+  .m-pace-table th.E { color: var(--e-text); background: var(--e-bg); }
+  .m-pace-table th.M { color: var(--m-text); background: var(--m-bg); }
+  .m-pace-table th.T { color: var(--t-text); background: var(--t-bg); }
+  .m-pace-table th.I { color: var(--i-text); background: var(--i-bg); }
+  .m-pace-table th.R { color: var(--r-text); background: var(--r-bg); }
+  .m-pace-table th.tot { color: var(--text-secondary); background: #fff; border: 0.5px solid var(--cool-border); }
+  .m-pace-table td { padding: 3px 2px; text-align: center; vertical-align: middle; }
+  .m-pace-input {
+    width: 100%;
+    border: 0.5px solid var(--cool-border);
+    border-radius: 4px;
+    padding: 3px 2px;
+    font-size: 12px;
+    text-align: center;
+    background: #fff;
+    font-family: var(--font-sans);
+  }
+  .m-pace-input:focus { outline: none; }
+  .m-pace-input.E { color: var(--e-text); border-color: var(--e-border); }
+  .m-pace-input.M { color: var(--m-text); border-color: var(--m-border); }
+  .m-pace-input.T { color: var(--t-text); border-color: var(--t-border); }
+  .m-pace-input.I { color: var(--i-text); border-color: var(--i-border); }
+  .m-pace-input.R { color: var(--r-text); border-color: var(--r-border); }
+  .m-tot-cell {
+    font-size: 12px;
+    font-weight: 500;
+    background: #fff;
+    border-radius: 4px;
+    padding: 3px 2px;
+    border: 0.5px solid var(--cool-border);
+  }
+  .m-scroll-hint {
+    padding: 6px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    border-top: 0.5px solid var(--cool-border);
+    background: var(--cool-bg);
+    flex-shrink: 0;
+  }
+
+  /* Bottom sheets */
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.28);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+  }
+  .sheet-backdrop.open { display: flex; }
+  .bottom-sheet {
+    background: #fff;
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-height: 80dvh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+  }
+  .sheet-backdrop.open .bottom-sheet { transform: translateY(0); }
+  .sheet-handle {
+    width: 32px; height: 4px;
+    background: var(--cool-border);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+  .sheet-header {
+    padding: 10px 16px 8px;
+    border-bottom: 0.5px solid var(--cool-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .sheet-title { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .sheet-close { border: none; background: none; color: var(--text-tertiary); cursor: pointer; font-size: 14px; padding: 0; }
+  .sheet-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+}
+
+/* Hide mobile view on desktop */
+@media (min-width: 641px) {
+  #mobile-view { display: none; }
+  #desktop-view { display: contents; }
+  #mobile-pace-strip { display: none; }
+  .sheet-backdrop { display: none !important; }
+}
+
+/* Tag popover (small, inline) */
+.tag-popover {
+  position: fixed;
+  background: #fff;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  padding: 8px;
+  z-index: 150;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+.tag-popover.open { display: flex; }
+.tag-popover-title { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+.tag-options { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag-option {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  border: 0.5px solid var(--cool-border);
+  background: var(--cool-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.tag-option:hover { background: var(--cool-border); }
+.tag-option.Q { background: var(--q-bg); color: var(--q-text); border-color: var(--q-border); font-weight: 700; }
+.tag-custom-row { display: flex; gap: 4px; }
+.tag-custom-input {
+  flex: 1;
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 6px;
+  background: #fff;
+  font-family: var(--font-sans);
+}
+.tag-custom-input:focus { outline: none; border-color: #aaa; }
+.tag-add-btn {
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+.tag-add-btn:hover { background: var(--cool-bg); }
+</style>
+</head>
+<body>
+
+<div id="loading-screen"><div class="spinner"></div> Loading plan…</div>
+
+<!-- ── Topbar ── -->
+<div id="topbar">
+  <div class="topbar-left">
+    <div class="title-stack">
+      <span class="plan-title" id="plan-title-display">Marathon Plan</span>
+      <div class="plan-subtitle">
+        <span id="plan-subtitle-text">—</span>
+        <i class="ti ti-pencil edit-icon" id="open-plan-settings" title="Edit plan settings"></i>
+      </div>
+    </div>
+    <!-- Desktop pace chip group -->
+    <div class="pace-chip-group" id="pace-chip-group" title="Edit paces">
+      <span class="pace-chip E" data-pace="E" id="chip-E">E —</span>
+      <span class="pace-chip M" data-pace="M" id="chip-M">M —</span>
+      <span class="pace-chip T" data-pace="T" id="chip-T">T —</span>
+      <span class="pace-chip I" data-pace="I" id="chip-I">I —</span>
+      <span class="pace-chip R" data-pace="R" id="chip-R">R —</span>
+      <span class="pace-edit-btn" id="open-pace-editor"><i class="ti ti-pencil"></i></span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn" id="open-api-key" title="API key settings">
+      <i class="ti ti-key"></i>
+    </button>
+    <button class="ramp-btn" id="open-ramp">
+      <svg width="16" height="14" viewBox="0 0 20 16" fill="none">
+        <line x1="3" y1="1" x2="3" y2="13" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+        <line x1="3" y1="13" x2="19" y2="13" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+        <path d="M3 13 C7 13 10 12 13 10 C15 8.5 17 5 19 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <span>Mileage ramp</span>
+    </button>
+  </div>
+</div>
+
+<!-- Mobile pace strip (below topbar, above week nav) -->
+<div id="mobile-pace-strip">
+  <div class="m-pace-chip E" id="m-chip-E">E —</div>
+  <div class="m-pace-chip M" id="m-chip-M">M —</div>
+  <div class="m-pace-chip T" id="m-chip-T">T —</div>
+  <div class="m-pace-chip I" id="m-chip-I">I —</div>
+  <div class="m-pace-chip R" id="m-chip-R">R —</div>
+</div>
+
+<!-- ── Desktop week list ── -->
+<div id="desktop-view">
+  <div id="main">
+    <!-- Week rows rendered by JS -->
+  </div>
+</div>
+
+<!-- ── Mobile week view ── -->
+<div id="mobile-view">
+  <div class="m-week-nav">
+    <span class="m-nav-arrow" id="m-prev-week"><i class="ti ti-chevron-left"></i></span>
+    <div class="m-nav-center">
+      <span class="m-nav-num" id="m-week-num">—</span>
+      <span class="m-nav-dates" id="m-week-dates">—</span>
+      <span class="m-nav-phase" id="m-week-phase">—</span>
+    </div>
+    <span class="m-nav-arrow" id="m-next-week"><i class="ti ti-chevron-right"></i></span>
+  </div>
+  <div class="m-summary">
+    <div class="m-stats" id="m-stats">
+      <div class="m-stat-item"><div class="m-stat-val neutral" id="m-vs-target">—</div><div class="m-stat-lbl">vs target</div></div>
+      <div class="m-stat-item"><div class="m-stat-val neutral" id="m-wow-miles">—</div><div class="m-stat-lbl">WoW miles</div></div>
+      <div class="m-stat-item"><div class="m-stat-val neutral" id="m-wow-long">—</div><div class="m-stat-lbl">WoW long run</div></div>
+    </div>
+    <div class="m-mix-row" id="m-mix-row">
+      <div class="m-mix-bar" id="m-mix-bar"></div>
+      <div class="m-mix-legend" id="m-mix-legend"></div>
+    </div>
+  </div>
+  <div class="m-days" id="m-days">
+    <!-- Day rows rendered by JS -->
+  </div>
+  <div class="m-scroll-hint">← swipe or tap arrows to change week →</div>
+</div>
+
+<!-- ── Popovers (desktop) ── -->
+
+<!-- Plan settings -->
+<div class="popover-backdrop" id="plan-settings-backdrop">
+  <div class="popover" id="plan-settings-popover" style="top:52px;left:16px;">
+    <div class="popover-header">
+      <span class="popover-title"><i class="ti ti-pencil" style="font-size:13px"></i> Plan settings</span>
+      <button class="popover-close" data-close="plan-settings"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="popover-body">
+      <div class="pop-field">
+        <div class="pop-label">Plan name</div>
+        <input class="pop-input full" type="text" id="ps-name" placeholder="NYC Marathon 2026">
+      </div>
+      <div class="pop-divider"></div>
+      <div class="pop-two-col">
+        <div class="pop-field">
+          <div class="pop-label">Race date</div>
+          <input class="pop-input" type="date" id="ps-race-date">
+        </div>
+        <div class="pop-field">
+          <div class="pop-label">Training weeks</div>
+          <div class="pop-row-field">
+            <input class="pop-input narrow" type="number" id="ps-num-weeks" min="8" max="52">
+            <span style="font-size:11px;color:var(--text-secondary)">weeks</span>
+          </div>
+        </div>
+      </div>
+      <div class="pop-derived">
+        <div><div class="pop-d-val" id="ps-start-date">—</div><div class="pop-d-lbl">start date</div></div>
+        <div><div class="pop-d-val" id="ps-week-range">—</div><div class="pop-d-lbl">week range</div></div>
+        <div><div class="pop-d-val" id="ps-race-day">—</div><div class="pop-d-lbl">race day</div></div>
+      </div>
+      <div class="pop-warn"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px"></i> Changing training weeks adds or removes weeks from the <b>start</b>. Existing data is preserved.</div>
+      <div class="pop-action-row">
+        <button class="pop-btn" id="ps-save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mileage ramp -->
+<div class="popover-backdrop" id="ramp-backdrop">
+  <div class="popover" id="ramp-popover" style="top:52px;right:16px;">
+    <div class="popover-header">
+      <span class="popover-title">
+        <svg width="13" height="12" viewBox="0 0 20 16" fill="none">
+          <line x1="3" y1="1" x2="3" y2="13" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+          <line x1="3" y1="13" x2="19" y2="13" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+          <path d="M3 13 C7 13 10 12 13 10 C15 8.5 17 5 19 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        </svg>
+        Mileage ramp
+      </span>
+      <button class="popover-close" data-close="ramp"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="popover-body">
+      <div class="pop-sec-lbl">Mileage bounds</div>
+      <div class="pop-two-col">
+        <div class="pop-field">
+          <div class="pop-label">Starting mileage</div>
+          <div class="pop-row-field">
+            <input class="pop-input narrow" type="number" id="ramp-start-mi" value="20">
+            <span style="font-size:11px;color:var(--text-secondary)">mi / week</span>
+          </div>
+          <div class="pop-sublabel">Volume at first week of applied range</div>
+        </div>
+        <div class="pop-field">
+          <div class="pop-label">Peak mileage</div>
+          <div class="pop-row-field">
+            <input class="pop-input narrow" type="number" id="ramp-peak-mi" value="40">
+            <span style="font-size:11px;color:var(--text-secondary)">mi / week</span>
+          </div>
+          <div class="pop-sublabel">Target at peak training</div>
+        </div>
+      </div>
+      <div class="pop-divider"></div>
+      <div class="pop-field">
+        <div class="pop-label">Describe your ramp strategy</div>
+        <textarea class="pop-textarea" id="ramp-description" rows="4">Ramp from starting to peak miles over the base build. Cut back every third week by ~20%. Hold near peak for 2 weeks before taper. Taper at T-3, T-2, T-1 dropping to roughly 80%, 70%, and 50% of peak.</textarea>
+        <div class="pop-hint">Claude will generate a per-week target for the selected range. You can edit any week individually after generating.</div>
+      </div>
+      <div class="pop-divider"></div>
+      <div class="pop-field">
+        <div class="pop-label">Apply from</div>
+        <select class="pop-select" id="ramp-apply-from"></select>
+        <div class="pop-apply-note" id="ramp-apply-note">→ through T-1 · earlier weeks unchanged</div>
+      </div>
+      <div class="pop-error" id="ramp-error"></div>
+      <div class="pop-action-row">
+        <button class="pop-btn" id="ramp-generate">
+          <i class="ti ti-wand" style="font-size:12px"></i> Generate weekly targets ↗
+        </button>
+        <span class="pop-btn-note">overwrites selected range only</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pace editor -->
+<div class="popover-backdrop" id="pace-editor-backdrop">
+  <div class="popover" id="pace-editor-popover" style="top:52px;left:200px;">
+    <div class="popover-header">
+      <span class="popover-title"><i class="ti ti-chart-line" style="font-size:13px"></i> Training paces</span>
+      <button class="popover-close" data-close="pace-editor"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="popover-body">
+      <table class="pace-editor-table">
+        <thead><tr><th></th><th>Pace</th><th>Feel</th><th class="right">min/mi</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pace-chip-sm E">E</span></td><td style="font-size:12px;color:var(--text-secondary)">Easy</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Speak full sentences, feels almost too slow</td><td style="text-align:right"><input class="pace-pace-input" data-pace="E" id="pe-E" value="10:00"></td></tr>
+          <tr><td><span class="pace-chip-sm M">M</span></td><td style="font-size:12px;color:var(--text-secondary)">Marathon</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Controlled, aware you're working</td><td style="text-align:right"><input class="pace-pace-input" data-pace="M" id="pe-M" value="9:00"></td></tr>
+          <tr><td><span class="pace-chip-sm T">T</span></td><td style="font-size:12px;color:var(--text-secondary)">Threshold</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Comfortably hard, few words only</td><td style="text-align:right"><input class="pace-pace-input" data-pace="T" id="pe-T" value="8:30"></td></tr>
+          <tr><td><span class="pace-chip-sm I">I</span></td><td style="font-size:12px;color:var(--text-secondary)">Interval</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Heavy breathing, 5K effort, sustain 3–5 min</td><td style="text-align:right"><input class="pace-pace-input" data-pace="I" id="pe-I" value="8:00"></td></tr>
+          <tr><td><span class="pace-chip-sm R">R</span></td><td style="font-size:12px;color:var(--text-secondary)">Repetition</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Fast and sharp, 400m race effort, full recovery</td><td style="text-align:right"><input class="pace-pace-input" data-pace="R" id="pe-R" value="7:30"></td></tr>
+        </tbody>
+      </table>
+      <div class="pop-action-row">
+        <button class="pop-btn" id="pe-save">Save paces</button>
+        <span class="pop-btn-note">updates topbar and grid labels</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- API key settings -->
+<div class="popover-backdrop" id="apikey-backdrop">
+  <div class="popover" id="apikey-popover" style="top:52px;right:16px;">
+    <div class="popover-header">
+      <span class="popover-title"><i class="ti ti-key" style="font-size:13px"></i> Anthropic API key</span>
+      <button class="popover-close" data-close="apikey"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="popover-body">
+      <p class="apikey-note">Your API key is stored only in this browser's localStorage and is never sent anywhere except directly to Anthropic's API. It is used only for the mileage ramp generator.</p>
+      <div class="pop-field">
+        <div class="pop-label">API key</div>
+        <input class="pop-input full" type="password" id="apikey-input" placeholder="sk-ant-…">
+      </div>
+      <div class="pop-action-row">
+        <button class="pop-btn" id="apikey-save">Save key</button>
+        <button class="pop-btn" id="apikey-clear" style="color:var(--text-tertiary)">Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile bottom sheets -->
+<div class="sheet-backdrop" id="m-plan-settings-backdrop">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title"><i class="ti ti-pencil" style="font-size:12px"></i> Plan settings</span>
+      <button class="sheet-close" data-close-sheet="m-plan-settings">&#x2715;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="pop-field"><div class="pop-label">Plan name</div><input class="pop-input full" type="text" id="m-ps-name"></div>
+      <div class="pop-two-col">
+        <div class="pop-field"><div class="pop-label">Race date</div><input class="pop-input full" type="date" id="m-ps-race-date"></div>
+        <div class="pop-field"><div class="pop-label">Weeks</div><div class="pop-row-field"><input class="pop-input narrow" type="number" id="m-ps-num-weeks" min="8" max="52"><span style="font-size:10px;color:var(--text-secondary)">wks</span></div></div>
+      </div>
+      <div class="pop-derived">
+        <div><div class="pop-d-val" id="m-ps-start-date">—</div><div class="pop-d-lbl">start</div></div>
+        <div><div class="pop-d-val" id="m-ps-week-range">—</div><div class="pop-d-lbl">range</div></div>
+        <div><div class="pop-d-val" id="m-ps-race-day">—</div><div class="pop-d-lbl">race day</div></div>
+      </div>
+      <div class="pop-warn" style="font-size:10px"><i class="ti ti-alert-triangle" style="font-size:11px;vertical-align:-1px"></i> Weeks added/removed from start. Existing data preserved.</div>
+      <button class="pop-btn" id="m-ps-save" style="justify-content:center;width:100%">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="m-ramp-backdrop">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">
+        <svg width="13" height="12" viewBox="0 0 20 16" fill="none">
+          <line x1="3" y1="1" x2="3" y2="13" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+          <line x1="3" y1="13" x2="19" y2="13" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+          <path d="M3 13 C7 13 10 12 13 10 C15 8.5 17 5 19 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        </svg>
+        Mileage ramp
+      </span>
+      <button class="sheet-close" data-close-sheet="m-ramp">&#x2715;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="pop-two-col">
+        <div class="pop-field"><div class="pop-label">Starting</div><div class="pop-row-field"><input class="pop-input narrow" type="number" id="m-ramp-start-mi" value="20"><span style="font-size:10px;color:var(--text-secondary)">mi</span></div><div class="pop-sublabel">First week of range</div></div>
+        <div class="pop-field"><div class="pop-label">Peak</div><div class="pop-row-field"><input class="pop-input narrow" type="number" id="m-ramp-peak-mi" value="40"><span style="font-size:10px;color:var(--text-secondary)">mi</span></div></div>
+      </div>
+      <div class="pop-field">
+        <div class="pop-label">Ramp strategy</div>
+        <textarea class="pop-textarea" id="m-ramp-description" rows="3" style="min-height:56px">Ramp to peak over base build. Cut back every 3rd week ~20%. Taper T-3 to T-1 at 80%, 70%, 50% of peak.</textarea>
+        <div class="pop-hint">Claude generates per-week targets for the selected range.</div>
+      </div>
+      <div class="pop-field"><div class="pop-label">Apply from</div><select class="pop-select" id="m-ramp-apply-from"></select></div>
+      <div class="pop-error" id="m-ramp-error"></div>
+      <button class="pop-btn" id="m-ramp-generate" style="justify-content:center;width:100%">
+        <i class="ti ti-wand" style="font-size:12px"></i> Generate weekly targets ↗
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="m-pace-editor-backdrop">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title"><i class="ti ti-chart-line" style="font-size:12px"></i> Training paces</span>
+      <button class="sheet-close" data-close-sheet="m-pace-editor">&#x2715;</button>
+    </div>
+    <div class="sheet-body">
+      <table class="pace-editor-table">
+        <thead><tr><th></th><th>Pace</th><th>Feel</th><th class="right">min/mi</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pace-chip-sm E">E</span></td><td style="font-size:11px;color:var(--text-secondary)">Easy</td><td style="font-size:10px;color:var(--text-tertiary);line-height:1.4">Full sentences, almost too slow</td><td style="text-align:right"><input class="pace-pace-input" data-pace="E" id="m-pe-E" value="10:00"></td></tr>
+          <tr><td><span class="pace-chip-sm M">M</span></td><td style="font-size:11px;color:var(--text-secondary)">Marathon</td><td style="font-size:10px;color:var(--text-tertiary);line-height:1.4">Controlled, aware of effort</td><td style="text-align:right"><input class="pace-pace-input" data-pace="M" id="m-pe-M" value="9:00"></td></tr>
+          <tr><td><span class="pace-chip-sm T">T</span></td><td style="font-size:11px;color:var(--text-secondary)">Threshold</td><td style="font-size:10px;color:var(--text-tertiary);line-height:1.4">Comfortably hard, few words</td><td style="text-align:right"><input class="pace-pace-input" data-pace="T" id="m-pe-T" value="8:30"></td></tr>
+          <tr><td><span class="pace-chip-sm I">I</span></td><td style="font-size:11px;color:var(--text-secondary)">Interval</td><td style="font-size:10px;color:var(--text-tertiary);line-height:1.4">Heavy breathing, 5K effort</td><td style="text-align:right"><input class="pace-pace-input" data-pace="I" id="m-pe-I" value="8:00"></td></tr>
+          <tr><td><span class="pace-chip-sm R">R</span></td><td style="font-size:11px;color:var(--text-secondary)">Repetition</td><td style="font-size:10px;color:var(--text-tertiary);line-height:1.4">Fast, sharp, 400m effort</td><td style="text-align:right"><input class="pace-pace-input" data-pace="R" id="m-pe-R" value="7:30"></td></tr>
+        </tbody>
+      </table>
+      <button class="pop-btn" id="m-pe-save" style="justify-content:center;width:100%">Save paces</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tag popover -->
+<div class="tag-popover" id="tag-popover">
+  <div class="tag-popover-title">Add tag</div>
+  <div class="tag-options" id="tag-options"></div>
+  <div class="tag-custom-row">
+    <input class="tag-custom-input" id="tag-custom-input" placeholder="custom…" maxlength="20">
+    <button class="tag-add-btn" id="tag-add-btn">Add</button>
+  </div>
+</div>
+
+<script>
+// ── Config (replace before deploy) ──
+const SUPABASE_URL  = 'REPLACE_WITH_SUPABASE_URL';
+const SUPABASE_ANON = 'REPLACE_WITH_SUPABASE_ANON_KEY';
+
+// ── In-memory state ──
+let plan  = null;   // { id, plan_name, race_date, num_weeks, vdot_paces }
+let weeks = [];     // sorted descending by week_number (T-26 first)
+let days  = {};     // { [week_id]: Day[7] } sorted by day_of_week
+
+// Which week is expanded on desktop (week_number), null = none
+let openWeekNumber = null;
+
+// Which week is shown on mobile (index into weeks array)
+let mobileWeekIndex = 0;
+
+// ────────────────────────────────────────────────
+// Date helpers
+// ────────────────────────────────────────────────
+
+function parseDate(str) {
+  // "YYYY-MM-DD" → local Date at midnight
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+function fmtDate(date, opts = {month:'short', day:'numeric'}) {
+  return date.toLocaleDateString('en-US', opts);
+}
+
+function fmtDateShort(date) {
+  return date.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+
+function isoDate(date) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+// Week start = race_date − week_number * 7 (always a Monday)
+function weekStartDate(raceDate, weekNumber) {
+  return addDays(parseDate(raceDate), -weekNumber * 7);
+}
+
+function weekDateRange(raceDate, weekNumber) {
+  const start = weekStartDate(raceDate, weekNumber);
+  const end   = addDays(start, 6);
+  const sameMonth = start.getMonth() === end.getMonth();
+  if (sameMonth) {
+    return `${fmtDate(start)} – ${end.getDate()}`;
+  }
+  return `${fmtDateShort(start)} – ${fmtDateShort(end)}`;
+}
+
+function isToday(date) {
+  const t = new Date();
+  return date.getFullYear() === t.getFullYear() &&
+         date.getMonth()    === t.getMonth()    &&
+         date.getDate()     === t.getDate();
+}
+
+// ────────────────────────────────────────────────
+// Derived calculations
+// ────────────────────────────────────────────────
+
+const DAY_NAMES  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const PACE_KEYS  = ['easy','marathon','threshold','interval','repetition'];
+const PACE_LABELS= ['Easy','Marathon','Threshold','Interval','Repetition'];
+const PACE_CODES = ['E','M','T','I','R'];
+const PACE_COLORS= ['#97C459','#378ADD','#EF9F27','#E24B4A','#7F77DD'];
+
+const PHASE_DESCS = {
+  'Foundation':        'Build aerobic base. Easy mileage, strides, light strength work.',
+  'Initial Quality':   'Introduce quality workouts. T and I paces, volume building.',
+  'Transition Quality':'Bridge base to race-specific work. Mix of T, M, and I.',
+  'Final Quality':     'Race-specific sharpening. M pace emphasis, longer tempos.',
+  'Taper':             'Reduce volume, maintain intensity. Freshen legs for race day.',
+};
+
+function dayTotal(day) {
+  if (!day) return 0;
+  return (day.easy_miles||0) + (day.marathon_miles||0) +
+         (day.threshold_miles||0) + (day.interval_miles||0) +
+         (day.repetition_miles||0);
+}
+
+function weekTotal(weekId) {
+  const ds = days[weekId] || [];
+  return ds.reduce((s, d) => s + dayTotal(d), 0);
+}
+
+// Build a flat date-keyed map of daily totals across all weeks for ACR
+function buildDailyTotalsMap() {
+  const map = {}; // "YYYY-MM-DD" → miles
+  for (const wk of weeks) {
+    const wStart = weekStartDate(plan.race_date, wk.week_number);
+    const ds = days[wk.id] || [];
+    for (const day of ds) {
+      const date = addDays(wStart, day.day_of_week);
+      map[isoDate(date)] = (map[isoDate(date)] || 0) + dayTotal(day);
+    }
+  }
+  return map;
+}
+
+function computeACR(dateStr, dailyMap) {
+  const target = parseDate(dateStr);
+  let acute = 0, chronic = 0;
+  for (let i = 0; i < 28; i++) {
+    const d = isoDate(addDays(target, -i));
+    const mi = dailyMap[d] || 0;
+    if (i < 7) acute += mi;
+    chronic += mi;
+  }
+  chronic /= 4;
+  if (chronic === 0) return null;
+  return (acute / chronic) * 100;
+}
+
+function acrClass(acr) {
+  if (acr === null) return 'dim';
+  if (acr < 50)  return 'purple';
+  if (acr < 80)  return 'blue';
+  if (acr < 130) return 'green';
+  if (acr < 150) return 'orange';
+  return 'red';
+}
+
+// WoW color
+function wowClass(pct) {
+  if (pct === null || pct === undefined) return 'neutral';
+  if (pct > 20)  return 'red';
+  if (pct > 10)  return 'orange';
+  if (pct < -15) return 'orange';
+  return 'green';
+}
+
+function wowLabel(pct, suffix='') {
+  if (pct === null || pct === undefined) return '—';
+  const sign = pct >= 0 ? '+' : '';
+  return `${sign}${Math.round(pct)}%${suffix}`;
+}
+
+function vsTargetClass(diff) {
+  if (diff === null) return 'neutral';
+  if (diff >= 0) return 'green';
+  return 'orange';
+}
+
+function roundMi(n) {
+  return Math.round(n * 10) / 10;
+}
+
+// ────────────────────────────────────────────────
+// Pace chips
+// ────────────────────────────────────────────────
+
+function updatePaceChips() {
+  if (!plan) return;
+  const paces = plan.vdot_paces || {};
+  for (const code of PACE_CODES) {
+    const val = paces[code] || '—';
+    const el = document.getElementById(`chip-${code}`);
+    if (el) el.textContent = `${code} ${val}`;
+    const mel = document.getElementById(`m-chip-${code}`);
+    if (mel) mel.textContent = `${code} ${val}`;
+    const pe = document.getElementById(`pe-${code}`);
+    if (pe) pe.value = val;
+    const mpe = document.getElementById(`m-pe-${code}`);
+    if (mpe) mpe.value = val;
+  }
+}
+
+// ────────────────────────────────────────────────
+// Plan subtitle
+// ────────────────────────────────────────────────
+
+function updateSubtitle() {
+  if (!plan) return;
+  document.getElementById('plan-title-display').textContent = plan.plan_name;
+  const raceDate = parseDate(plan.race_date);
+  const today = new Date();
+  const msPerDay = 86400000;
+  const daysOut = Math.round((raceDate - today) / msPerDay);
+  const weeksOut = Math.round(daysOut / 7);
+  const raceStr = fmtDate(raceDate, {month:'short', day:'numeric'});
+  const sub = weeksOut > 0 ? `${raceStr} · ${weeksOut} weeks out`
+            : weeksOut === 0 ? `${raceStr} · Race week!`
+            : `${raceStr} · ${Math.abs(weeksOut)} weeks ago`;
+  document.getElementById('plan-subtitle-text').textContent = sub;
+}
+
+// ────────────────────────────────────────────────
+// Desktop rendering
+// ────────────────────────────────────────────────
+
+function renderDesktop() {
+  const container = document.getElementById('main');
+  container.innerHTML = '';
+
+  const dailyMap = buildDailyTotalsMap();
+
+  for (const wk of weeks) {
+    if (wk.week_number === openWeekNumber) {
+      container.appendChild(buildOpenWeekBlock(wk, dailyMap));
+    } else {
+      container.appendChild(buildCollapsedRow(wk, dailyMap));
+    }
+  }
+}
+
+function buildCollapsedRow(wk, dailyMap) {
+  const row = document.createElement('div');
+  const wStart = weekStartDate(plan.race_date, wk.week_number);
+  const today = new Date();
+  const isPast = addDays(wStart, 6) < today;
+
+  row.className = 'week-row' + (isPast ? ' past' : '');
+
+  // Peak ACR for the week
+  let peakACR = null;
+  const wDays = days[wk.id] || [];
+  for (const day of wDays) {
+    if (dayTotal(day) > 0) {
+      const dateStr = isoDate(addDays(wStart, day.day_of_week));
+      const acr = computeACR(dateStr, dailyMap);
+      if (acr !== null && (peakACR === null || acr > peakACR)) peakACR = acr;
+    }
+  }
+
+  const totalMi = roundMi(weekTotal(wk.id));
+  const miStr = totalMi > 0 ? `${totalMi} mi` : (wk.target_miles > 0 ? `${wk.target_miles} mi target` : '—');
+  const acrStr = peakACR !== null ? `ACR ${Math.round(peakACR)}%` : 'ACR —';
+  const acrCls = peakACR !== null ? acrClass(peakACR) : 'dim';
+
+  row.innerHTML = `
+    <i class="ti ti-chevron-right wr-chev"></i>
+    <span class="wr-num">Week T-${wk.week_number}</span>
+    <span class="wr-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
+    <span class="wr-phase">${wk.phase}</span>
+    <span class="wr-mi">${miStr}</span>
+    <span class="acr-pill ${acrCls}">${acrStr}</span>
+  `;
+
+  row.addEventListener('click', () => {
+    openWeekNumber = wk.week_number;
+    renderDesktop();
+    // Scroll the newly opened block into view
+    setTimeout(() => {
+      const el = document.querySelector('.week-block');
+      if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 0);
+  });
+
+  return row;
+}
+
+function buildOpenWeekBlock(wk, dailyMap) {
+  const block = document.createElement('div');
+  block.className = 'week-block';
+  block.dataset.weekId = wk.id;
+
+  const wStart = weekStartDate(plan.race_date, wk.week_number);
+  const wDays  = days[wk.id] || [];
+
+  // Compute peak ACR for header pill
+  let peakACR = null;
+  for (const day of wDays) {
+    if (dayTotal(day) > 0) {
+      const dateStr = isoDate(addDays(wStart, day.day_of_week));
+      const acr = computeACR(dateStr, dailyMap);
+      if (acr !== null && (peakACR === null || acr > peakACR)) peakACR = acr;
+    }
+  }
+  const peakStr = peakACR !== null ? `peak ACR ${Math.round(peakACR)}%` : 'ACR —';
+  const peakCls = peakACR !== null ? acrClass(peakACR) : 'dim';
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'wbh';
+  hdr.innerHTML = `
+    <i class="ti ti-chevron-down" style="font-size:11px;color:var(--text-tertiary);flex-shrink:0"></i>
+    <span class="wbh-num">Week T-${wk.week_number}</span>
+    <span class="wbh-sep">·</span>
+    <span class="wbh-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
+    <select class="loc-select" data-week-id="${wk.id}">
+      <option ${wk.location==='New York'?'selected':''}>New York</option>
+      <option ${wk.location==='San Francisco'?'selected':''}>San Francisco</option>
+      <option ${wk.location==='Travel'?'selected':''}>Travel</option>
+    </select>
+    <span class="wbh-acr"><span class="acr-pill ${peakCls}">${peakStr}</span></span>
+  `;
+  hdr.querySelector('.ti-chevron-down').closest('.wbh').addEventListener('click', (e) => {
+    if (e.target.tagName === 'SELECT') return;
+    openWeekNumber = null;
+    renderDesktop();
+  });
+  // Location change saves inline (Supabase wired in step 5)
+  hdr.querySelector('select').addEventListener('change', (e) => {
+    e.stopPropagation();
+    wk.location = e.target.value;
+    saveWeekMeta(wk);
+  });
+  block.appendChild(hdr);
+
+  // Q row
+  const qRow = document.createElement('div');
+  qRow.className = 'q-row';
+  const phaseDesc = PHASE_DESCS[wk.phase] || '';
+  qRow.innerHTML = `
+    <div class="q-context">
+      <div>
+        <div class="q-phase-name">${wk.phase}</div>
+        <div class="q-phase-desc">${phaseDesc}</div>
+      </div>
+      <div>
+        <div class="q-target">${wk.target_miles > 0 ? wk.target_miles + ' mi' : '—'}</div>
+        <div class="q-target-lbl">weekly target</div>
+      </div>
+    </div>
+    <div class="q-cell">
+      <div><span class="qlbl">Q1</span></div>
+      <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription" placeholder="Q1 workout prescription…">${escHtml(wk.q1_prescription||'')}</textarea>
+    </div>
+    <div class="q-cell">
+      <div><span class="qlbl">Q2</span></div>
+      <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription" placeholder="Q2 workout prescription…">${escHtml(wk.q2_prescription||'')}</textarea>
+    </div>
+  `;
+  // Auto-resize and save on blur
+  qRow.querySelectorAll('.q-prescription').forEach(ta => {
+    autoResizeTextarea(ta);
+    ta.addEventListener('input', () => autoResizeTextarea(ta));
+    ta.addEventListener('blur', () => {
+      wk[ta.dataset.field] = ta.value;
+      saveWeekMeta(wk);
+    });
+  });
+  block.appendChild(qRow);
+
+  // Week inner (grid + summary)
+  const inner = document.createElement('div');
+  inner.className = 'week-inner';
+
+  // Grid pane
+  const gridPane = document.createElement('div');
+  gridPane.className = 'grid-pane';
+  gridPane.appendChild(buildCalGrid(wk, wStart, wDays, dailyMap));
+  inner.appendChild(gridPane);
+
+  // Summary pane
+  inner.appendChild(buildSummaryPane(wk, wDays));
+
+  block.appendChild(inner);
+  return block;
+}
+
+function buildCalGrid(wk, wStart, wDays, dailyMap) {
+  const table = document.createElement('table');
+  table.className = 'cal-grid';
+
+  // colgroup
+  table.innerHTML = `<colgroup>
+    <col class="rl-col">
+    <col class="day-col"><col class="day-col"><col class="day-col">
+    <col class="day-col"><col class="day-col"><col class="day-col"><col class="day-col">
+  </colgroup>`;
+
+  // thead: day headers
+  const thead = document.createElement('thead');
+
+  // Row 1: day names + dates
+  const hdrRow = document.createElement('tr');
+  hdrRow.innerHTML = '<th class="rl"></th>';
+  for (let d = 0; d < 7; d++) {
+    const date = addDays(wStart, d);
+    hdrRow.innerHTML += `<th>
+      <div class="day-head-name">${DAY_NAMES[d]}</div>
+      <div class="day-head-date">${fmtDate(date, {month:'short', day:'numeric'})}</div>
+    </th>`;
+  }
+  thead.appendChild(hdrRow);
+
+  // Row 2: tags
+  const tagRow = document.createElement('tr');
+  tagRow.innerHTML = '<td class="rl"></td>';
+  for (let d = 0; d < 7; d++) {
+    const dayData = wDays.find(x => x.day_of_week === d);
+    const tags = dayData ? (dayData.tags || []) : [];
+    const td = document.createElement('td');
+    td.className = 'tag-cell';
+    td.appendChild(buildTagCell(wk.id, d, tags));
+    tagRow.appendChild(td);
+  }
+  thead.appendChild(tagRow);
+  table.appendChild(thead);
+
+  // tbody: pace rows + total + ACR
+  const tbody = document.createElement('tbody');
+
+  for (let pi = 0; pi < 5; pi++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="rl"><span class="pace-lbl ${PACE_CODES[pi]}">${PACE_LABELS[pi]}</span></td>`;
+    for (let d = 0; d < 7; d++) {
+      const dayData = wDays.find(x => x.day_of_week === d);
+      const fieldKey = `${PACE_KEYS[pi]}_miles`;
+      const val = dayData ? (dayData[fieldKey] || 0) : 0;
+      const td = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.min = '0';
+      inp.step = '0.5';
+      inp.className = `pace-input ${PACE_CODES[pi]}`;
+      inp.value = val || '';
+      inp.placeholder = '0';
+      inp.dataset.weekId = wk.id;
+      inp.dataset.dayOfWeek = d;
+      inp.dataset.field = fieldKey;
+      inp.addEventListener('change', onPaceInputChange);
+      inp.addEventListener('blur', onPaceInputBlur);
+      td.appendChild(inp);
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+
+  // Total row
+  const totRow = document.createElement('tr');
+  totRow.className = 'tot-row';
+  totRow.innerHTML = `<td class="rl"><span class="pace-lbl tot">Total</span></td>`;
+  for (let d = 0; d < 7; d++) {
+    const dayData = wDays.find(x => x.day_of_week === d);
+    const tot = dayData ? roundMi(dayTotal(dayData)) : 0;
+    totRow.innerHTML += `<td class="tot-val" data-week-id="${wk.id}" data-day="${d}">${tot || ''}</td>`;
+  }
+  tbody.appendChild(totRow);
+
+  // ACR row
+  const acrRow = document.createElement('tr');
+  acrRow.className = 'acr-row';
+  acrRow.innerHTML = `<td class="rl">ACR</td>`;
+  for (let d = 0; d < 7; d++) {
+    const dayData = wDays.find(x => x.day_of_week === d);
+    const td = document.createElement('td');
+    if (dayData && dayTotal(dayData) > 0) {
+      const dateStr = isoDate(addDays(wStart, d));
+      const acr = computeACR(dateStr, dailyMap);
+      if (acr !== null) {
+        const cls = acrClass(acr);
+        td.className = `acr-cell ${cls}`;
+        td.textContent = `${Math.round(acr)}%`;
+      } else {
+        td.textContent = '—';
+      }
+    } else {
+      td.textContent = '—';
+    }
+    acrRow.appendChild(td);
+  }
+  tbody.appendChild(acrRow);
+
+  table.appendChild(tbody);
+  return table;
+}
+
+function buildTagCell(weekId, dayOfWeek, tags) {
+  const stack = document.createElement('div');
+  stack.className = 'tag-stack';
+  stack.dataset.weekId = weekId;
+  stack.dataset.day = dayOfWeek;
+
+  const group = document.createElement('div');
+  group.className = 'tag-group';
+
+  for (const t of tags) {
+    group.appendChild(makeTagEl(t, weekId, dayOfWeek));
+  }
+
+  const plus = document.createElement('span');
+  plus.className = 'tag plus';
+  plus.textContent = '+';
+  plus.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openTagPopover(weekId, dayOfWeek, plus);
+  });
+
+  if (tags.length > 0) stack.appendChild(group);
+  stack.appendChild(plus);
+  return stack;
+}
+
+function makeTagEl(tagText, weekId, dayOfWeek) {
+  const span = document.createElement('span');
+  const isQ = tagText === 'Q1' || tagText === 'Q2';
+  span.className = `tag ${isQ ? 'Q' : 'activity'}`;
+  span.dataset.weekId = weekId;
+  span.dataset.day = dayOfWeek;
+  span.dataset.tag = tagText;
+
+  const txt = document.createTextNode(tagText);
+  const x = document.createElement('span');
+  x.className = 'tag-x';
+  x.textContent = '×';
+  x.addEventListener('click', (e) => {
+    e.stopPropagation();
+    removeTag(weekId, dayOfWeek, tagText);
+  });
+  span.appendChild(txt);
+  span.appendChild(x);
+  return span;
+}
+
+function buildSummaryPane(wk, wDays) {
+  const pane = document.createElement('div');
+  pane.className = 'summary-pane';
+  pane.id = `summary-${wk.id}`;
+
+  const total = wDays.reduce((s, d) => s + dayTotal(d), 0);
+
+  // vs target
+  const diff = wk.target_miles > 0 ? roundMi(total - wk.target_miles) : null;
+  const diffCls = vsTargetClass(diff);
+  const diffStr = diff === null ? '—' : (diff >= 0 ? `+${diff} mi` : `${diff} mi`);
+  const diffLbl = diff === null ? '—' : `${roundMi(total)} of ${wk.target_miles} weekly miles`;
+
+  // WoW miles
+  const prevWk = weeks.find(w => w.week_number === wk.week_number + 1);
+  let wowMiles = null, wowLong = null;
+  if (prevWk) {
+    const prevDays = days[prevWk.id] || [];
+    const prevTotal = prevDays.reduce((s, d) => s + dayTotal(d), 0);
+    if (prevTotal > 0) wowMiles = ((total - prevTotal) / prevTotal) * 100;
+
+    const thisLong = Math.max(0, ...wDays.map(d => dayTotal(d)));
+    const prevLong = Math.max(0, ...prevDays.map(d => dayTotal(d)));
+    if (prevLong > 0) wowLong = ((thisLong - prevLong) / prevLong) * 100;
+  }
+
+  const wowMilesCls = wowClass(wowMiles);
+  const wowLongCls  = wowClass(wowLong);
+
+  pane.innerHTML = `
+    <div class="sum-tile ${diffCls}">
+      <div class="st-val ${diffCls}">${diffStr}</div>
+      <div class="st-lbl ${diffCls}">${diffLbl}</div>
+    </div>
+    <div class="sum-tile ${wowMilesCls}">
+      <div class="st-val ${wowMilesCls}">${wowLabel(wowMiles)}</div>
+      <div class="st-lbl ${wowMilesCls}">week over week miles</div>
+    </div>
+    <div class="sum-tile ${wowLongCls}">
+      <div class="st-val ${wowLongCls}">${wowLabel(wowLong)}</div>
+      <div class="st-lbl ${wowLongCls}">week over week long run</div>
+    </div>
+    ${buildMixBarHTML(wDays)}
+  `;
+  return pane;
+}
+
+function buildMixBarHTML(wDays) {
+  const totals = [0, 0, 0, 0, 0]; // E M T I R
+  for (const d of wDays) {
+    totals[0] += d.easy_miles || 0;
+    totals[1] += d.marathon_miles || 0;
+    totals[2] += d.threshold_miles || 0;
+    totals[3] += d.interval_miles || 0;
+    totals[4] += d.repetition_miles || 0;
+  }
+  const sum = totals.reduce((a, b) => a + b, 0);
+  const pcts = totals.map(v => sum > 0 ? Math.round(v / sum * 100) : 0);
+
+  const barParts = PACE_CODES.map((c, i) =>
+    `<div style="flex:${totals[i] || 0.001};background:${PACE_COLORS[i]}"></div>`
+  ).join('');
+
+  const legend = PACE_CODES.map((c, i) =>
+    `<span class="mix-legend-item"><span class="mix-dot" style="background:${PACE_COLORS[i]}"></span>${c} ${pcts[i]}%</span>`
+  ).join('');
+
+  return `
+    <div class="mix-wrap">
+      <div class="mix-label">Pace mix</div>
+      <div class="mix-bar">${barParts}</div>
+      <div class="mix-legend">${legend}</div>
+    </div>
+  `;
+}
+
+// ────────────────────────────────────────────────
+// Tag popover
+// ────────────────────────────────────────────────
+
+const PRESET_TAGS = ['Q1','Q2','swim','bike','barre','pilates','rest'];
+let tagPopoverState = null; // { weekId, dayOfWeek }
+
+function openTagPopover(weekId, dayOfWeek, anchor) {
+  tagPopoverState = { weekId, dayOfWeek };
+  const pop = document.getElementById('tag-popover');
+
+  // Build option chips
+  const opts = document.getElementById('tag-options');
+  opts.innerHTML = '';
+  const existingTags = getDayTags(weekId, dayOfWeek);
+  for (const t of PRESET_TAGS) {
+    if (existingTags.includes(t)) continue;
+    const chip = document.createElement('span');
+    chip.className = `tag-option ${t === 'Q1' || t === 'Q2' ? 'Q' : ''}`;
+    chip.textContent = t;
+    chip.addEventListener('click', () => {
+      addTag(weekId, dayOfWeek, t);
+      closeTagPopover();
+    });
+    opts.appendChild(chip);
+  }
+
+  document.getElementById('tag-custom-input').value = '';
+
+  // Position near anchor
+  const rect = anchor.getBoundingClientRect();
+  pop.style.left = `${rect.left}px`;
+  pop.style.top  = `${rect.bottom + 4}px`;
+  pop.classList.add('open');
+}
+
+function closeTagPopover() {
+  document.getElementById('tag-popover').classList.remove('open');
+  tagPopoverState = null;
+}
+
+function getDayTags(weekId, dayOfWeek) {
+  const wDays = days[weekId] || [];
+  const day = wDays.find(d => d.day_of_week === dayOfWeek);
+  return day ? (day.tags || []) : [];
+}
+
+function addTag(weekId, dayOfWeek, tagText) {
+  ensureDayExists(weekId, dayOfWeek);
+  const wDays = days[weekId];
+  const day = wDays.find(d => d.day_of_week === dayOfWeek);
+  if (!day.tags) day.tags = [];
+  if (!day.tags.includes(tagText)) {
+    day.tags = [...day.tags, tagText];
+    saveDayData(day);
+    rerenderOpenWeek();
+  }
+}
+
+function removeTag(weekId, dayOfWeek, tagText) {
+  const wDays = days[weekId] || [];
+  const day = wDays.find(d => d.day_of_week === dayOfWeek);
+  if (day) {
+    day.tags = (day.tags || []).filter(t => t !== tagText);
+    saveDayData(day);
+    rerenderOpenWeek();
+  }
+}
+
+// ────────────────────────────────────────────────
+// Input handlers
+// ────────────────────────────────────────────────
+
+function onPaceInputChange(e) {
+  const inp = e.target;
+  const weekId = inp.dataset.weekId;
+  const dayOfWeek = parseInt(inp.dataset.dayOfWeek);
+  const field = inp.dataset.field;
+  const val = parseFloat(inp.value) || 0;
+
+  ensureDayExists(weekId, dayOfWeek);
+  const day = days[weekId].find(d => d.day_of_week === dayOfWeek);
+  day[field] = val;
+
+  // Update total cell live
+  const totCell = document.querySelector(
+    `.tot-val[data-week-id="${weekId}"][data-day="${dayOfWeek}"]`
+  );
+  if (totCell) {
+    const t = roundMi(dayTotal(day));
+    totCell.textContent = t || '';
+  }
+
+  // Update summary pane
+  const sumPane = document.getElementById(`summary-${weekId}`);
+  if (sumPane) {
+    const wk = weeks.find(w => w.id === weekId);
+    if (wk) {
+      const newPane = buildSummaryPane(wk, days[weekId] || []);
+      sumPane.replaceWith(newPane);
+    }
+  }
+}
+
+function onPaceInputBlur(e) {
+  const inp = e.target;
+  const weekId = inp.dataset.weekId;
+  const dayOfWeek = parseInt(inp.dataset.dayOfWeek);
+  ensureDayExists(weekId, dayOfWeek);
+  const day = days[weekId].find(d => d.day_of_week === dayOfWeek);
+  saveDayData(day);
+}
+
+function ensureDayExists(weekId, dayOfWeek) {
+  if (!days[weekId]) days[weekId] = [];
+  if (!days[weekId].find(d => d.day_of_week === dayOfWeek)) {
+    days[weekId].push({
+      id: null,
+      week_id: weekId,
+      day_of_week: dayOfWeek,
+      easy_miles: 0, marathon_miles: 0,
+      threshold_miles: 0, interval_miles: 0, repetition_miles: 0,
+      tags: []
+    });
+    days[weekId].sort((a, b) => a.day_of_week - b.day_of_week);
+  }
+}
+
+function rerenderOpenWeek() {
+  if (openWeekNumber !== null) {
+    const dailyMap = buildDailyTotalsMap();
+    const wk = weeks.find(w => w.week_number === openWeekNumber);
+    if (wk) {
+      const existing = document.querySelector(`.week-block[data-week-id="${wk.id}"]`);
+      if (existing) {
+        const newBlock = buildOpenWeekBlock(wk, dailyMap);
+        existing.replaceWith(newBlock);
+      }
+    }
+  }
+}
+
+// ────────────────────────────────────────────────
+// Mobile rendering
+// ────────────────────────────────────────────────
+
+function renderMobile() {
+  if (!plan || weeks.length === 0) return;
+  const wk = weeks[mobileWeekIndex];
+  if (!wk) return;
+
+  const wStart = weekStartDate(plan.race_date, wk.week_number);
+  const wDays  = days[wk.id] || [];
+  const dailyMap = buildDailyTotalsMap();
+
+  // Nav
+  document.getElementById('m-week-num').textContent   = `Week T-${wk.week_number}`;
+  document.getElementById('m-week-dates').textContent = weekDateRange(plan.race_date, wk.week_number);
+  document.getElementById('m-week-phase').textContent = `${wk.phase}${wk.target_miles > 0 ? ' · ' + wk.target_miles + ' mi target' : ''}`;
+
+  // Summary stats
+  const total    = wDays.reduce((s, d) => s + dayTotal(d), 0);
+  const diff     = wk.target_miles > 0 ? roundMi(total - wk.target_miles) : null;
+  const diffCls  = vsTargetClass(diff);
+  const diffStr  = diff === null ? '—' : (diff >= 0 ? `+${diff} mi` : `${diff} mi`);
+  const prevWk   = weeks.find(w => w.week_number === wk.week_number + 1);
+  let wowMiles   = null, wowLong = null;
+  if (prevWk) {
+    const prevDays  = days[prevWk.id] || [];
+    const prevTotal = prevDays.reduce((s, d) => s + dayTotal(d), 0);
+    if (prevTotal > 0) wowMiles = ((total - prevTotal) / prevTotal) * 100;
+    const thisLong  = Math.max(0, ...wDays.map(d => dayTotal(d)));
+    const prevLong  = Math.max(0, ...prevDays.map(d => dayTotal(d)));
+    if (prevLong > 0) wowLong = ((thisLong - prevLong) / prevLong) * 100;
+  }
+
+  const vsEl = document.getElementById('m-vs-target');
+  vsEl.textContent = diffStr;
+  vsEl.className = `m-stat-val ${diffCls}`;
+
+  const wowEl = document.getElementById('m-wow-miles');
+  wowEl.textContent = wowLabel(wowMiles);
+  wowEl.className = `m-stat-val ${wowClass(wowMiles)}`;
+
+  const longEl = document.getElementById('m-wow-long');
+  longEl.textContent = wowLabel(wowLong);
+  longEl.className = `m-stat-val ${wowClass(wowLong)}`;
+
+  // Pace mix bar
+  const totals = [0,0,0,0,0];
+  for (const d of wDays) {
+    totals[0] += d.easy_miles||0; totals[1] += d.marathon_miles||0;
+    totals[2] += d.threshold_miles||0; totals[3] += d.interval_miles||0;
+    totals[4] += d.repetition_miles||0;
+  }
+  const mixSum = totals.reduce((a,b)=>a+b,0);
+  const pcts = totals.map(v => mixSum>0 ? Math.round(v/mixSum*100) : 0);
+  document.getElementById('m-mix-bar').innerHTML =
+    PACE_CODES.map((c,i) => `<div style="flex:${totals[i]||0.001};background:${PACE_COLORS[i]}"></div>`).join('');
+  document.getElementById('m-mix-legend').innerHTML =
+    PACE_CODES.map((c,i) => `<span class="m-mix-item"><span class="m-mix-dot" style="background:${PACE_COLORS[i]}"></span>${c} ${pcts[i]}%</span>`).join('');
+
+  // Day rows
+  const daysEl = document.getElementById('m-days');
+  daysEl.innerHTML = '';
+  for (let d = 0; d < 7; d++) {
+    const date    = addDays(wStart, d);
+    const dayData = wDays.find(x => x.day_of_week === d) || {
+      easy_miles:0, marathon_miles:0, threshold_miles:0, interval_miles:0, repetition_miles:0, tags:[]
+    };
+    const tags    = dayData.tags || [];
+    const hasMiles = dayTotal(dayData) > 0;
+
+    const row = document.createElement('div');
+    row.className = 'm-day-row' + (isToday(date) ? ' today' : '');
+
+    // ACR
+    let acrHTML = '';
+    if (hasMiles) {
+      const acr = computeACR(isoDate(date), dailyMap);
+      if (acr !== null) {
+        const cls = acrClass(acr);
+        acrHTML = `<span class="m-day-acr ${cls}">ACR ${Math.round(acr)}%</span>`;
+      }
+    }
+
+    // Q hint
+    const hasQ1 = tags.includes('Q1');
+    const hasQ2 = tags.includes('Q2');
+    const qHint = (hasQ1 && wk.q1_prescription) ? wk.q1_prescription.replace(/\n/g,' · ')
+                : (hasQ2 && wk.q2_prescription) ? wk.q2_prescription.replace(/\n/g,' · ')
+                : null;
+
+    // Tags HTML
+    const tagsHTML = tags.map(t => {
+      const isQ = t === 'Q1' || t === 'Q2';
+      return `<span class="m-dtag ${isQ ? (t==='Q1'?'q1':'q2') : 'activity'}">${t}</span>`;
+    }).join('') + `<span class="m-dtag plus">+</span>`;
+
+    row.innerHTML = `
+      <div class="m-day-header">
+        <div class="m-day-left">
+          <span class="m-day-name">${DAY_NAMES[d]}</span>
+          <span class="m-day-date">${fmtDate(date,{month:'short',day:'numeric'})}</span>
+          <div class="m-day-tags">${tagsHTML}</div>
+        </div>
+        ${acrHTML}
+      </div>
+      ${qHint ? `<div class="m-q-hint">${escHtml(qHint)}</div>` : ''}
+      <table class="m-pace-table">
+        <thead><tr>
+          <th class="E">E</th><th class="M">M</th><th class="T">T</th>
+          <th class="I">I</th><th class="R">R</th><th class="tot">tot</th>
+        </tr></thead>
+        <tbody><tr>
+          ${PACE_KEYS.map((k,i) => `<td><input type="number" min="0" step="0.5"
+            class="m-pace-input ${PACE_CODES[i]}"
+            data-week-id="${wk.id}" data-day="${d}" data-field="${k}_miles"
+            value="${dayData[k+'_miles']||''}" placeholder="0"></td>`).join('')}
+          <td><div class="m-tot-cell" data-m-tot-day="${d}">${roundMi(dayTotal(dayData))||''}</div></td>
+        </tr></tbody>
+      </table>
+    `;
+
+    // Wire inputs
+    row.querySelectorAll('.m-pace-input').forEach(inp => {
+      inp.addEventListener('change', onMobilePaceChange);
+      inp.addEventListener('blur', onPaceInputBlur);
+    });
+
+    daysEl.appendChild(row);
+  }
+}
+
+function onMobilePaceChange(e) {
+  const inp = e.target;
+  const weekId = inp.dataset.weekId;
+  const dayOfWeek = parseInt(inp.dataset.day);
+  const field = inp.dataset.field;
+  const val = parseFloat(inp.value) || 0;
+
+  ensureDayExists(weekId, dayOfWeek);
+  const day = days[weekId].find(d => d.day_of_week === dayOfWeek);
+  day[field] = val;
+
+  const totEl = inp.closest('table')?.querySelector(`[data-m-tot-day="${dayOfWeek}"]`);
+  if (totEl) totEl.textContent = roundMi(dayTotal(day)) || '';
+
+  // Refresh summary
+  renderMobileSummary();
+}
+
+function renderMobileSummary() {
+  // Re-run just the summary portion of renderMobile
+  if (plan && weeks.length > 0) {
+    const wk = weeks[mobileWeekIndex];
+    const wDays = days[wk.id] || [];
+    const total = wDays.reduce((s, d) => s + dayTotal(d), 0);
+    const diff = wk.target_miles > 0 ? roundMi(total - wk.target_miles) : null;
+    const diffCls = vsTargetClass(diff);
+    const diffStr = diff === null ? '—' : (diff >= 0 ? `+${diff} mi` : `${diff} mi`);
+    document.getElementById('m-vs-target').textContent = diffStr;
+    document.getElementById('m-vs-target').className = `m-stat-val ${diffCls}`;
+  }
+}
+
+// ────────────────────────────────────────────────
+// Utilities
+// ────────────────────────────────────────────────
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function autoResizeTextarea(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+
+// ────────────────────────────────────────────────
+// Supabase stubs (wired in Step 5)
+// ────────────────────────────────────────────────
+
+async function saveWeekMeta(wk) { /* Step 5 */ }
+async function saveDayData(day) { /* Step 5 */ }
+
+// ────────────────────────────────────────────────
+// Bootstrap with mock data
+// ────────────────────────────────────────────────
+
+function initMockData() {
+  plan = {
+    id: 'mock-plan-1',
+    plan_name: 'NYC Marathon 2026',
+    race_date: '2026-11-01',
+    num_weeks: 26,
+    vdot_paces: { E:'10:12', M:'8:47', T:'8:20', I:'7:45', R:'7:15' }
+  };
+
+  const phases = ['Foundation','Foundation','Foundation','Foundation',
+    'Foundation','Foundation','Foundation','Foundation',
+    'Initial Quality','Initial Quality','Initial Quality','Initial Quality',
+    'Transition Quality','Transition Quality','Transition Quality','Transition Quality',
+    'Final Quality','Final Quality','Final Quality','Final Quality',
+    'Final Quality','Final Quality','Final Quality',
+    'Taper','Taper','Taper'];
+
+  weeks = [];
+  days  = {};
+  for (let n = 26; n >= 1; n--) {
+    const wk = {
+      id: `mock-wk-${n}`,
+      plan_id: plan.id,
+      week_number: n,
+      phase: phases[26 - n] || 'Foundation',
+      location: 'New York',
+      target_miles: 0,
+      q1_prescription: '',
+      q2_prescription: '',
+    };
+    weeks.push(wk);
+    days[wk.id] = [];
+  }
+
+  // Seed T-22 with the mockup data
+  const wk22 = weeks.find(w => w.week_number === 22);
+  if (wk22) {
+    wk22.target_miles = 22;
+    wk22.q1_prescription = '2 Easy\n3×1T w/1 min rests\n8×200R w/200 jg\n1 Easy';
+    wk22.q2_prescription = '2 Easy\n4×1T w/1 min rests\n2 Easy';
+    days[wk22.id] = [
+      {id:'d0',week_id:wk22.id,day_of_week:0,easy_miles:0,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:[]},
+      {id:'d1',week_id:wk22.id,day_of_week:1,easy_miles:4,marathon_miles:0,threshold_miles:3,interval_miles:0,repetition_miles:1,tags:['Q1','swim']},
+      {id:'d2',week_id:wk22.id,day_of_week:2,easy_miles:0,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:['barre']},
+      {id:'d3',week_id:wk22.id,day_of_week:3,easy_miles:3.5,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:[]},
+      {id:'d4',week_id:wk22.id,day_of_week:4,easy_miles:4,marathon_miles:0,threshold_miles:3,interval_miles:0,repetition_miles:0,tags:['Q2']},
+      {id:'d5',week_id:wk22.id,day_of_week:5,easy_miles:4.5,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:[]},
+      {id:'d6',week_id:wk22.id,day_of_week:6,easy_miles:0,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:['rest']},
+    ];
+  }
+  // Seed some prior weeks for ACR
+  for (let n = 23; n <= 26; n++) {
+    const wk = weeks.find(w => w.week_number === n);
+    if (wk) {
+      days[wk.id] = [0,1,2,3,4,5,6].map(d => ({
+        id:`seed-${n}-${d}`, week_id:wk.id, day_of_week:d,
+        easy_miles: d===0||d===6 ? 0 : [5,4,6,5,4,7,0][d],
+        marathon_miles:0, threshold_miles:0, interval_miles:0, repetition_miles:0, tags:[]
+      }));
+    }
+  }
+}
+
+// ────────────────────────────────────────────────
+// Popover / sheet wiring
+// ────────────────────────────────────────────────
+
+function openPopover(name) {
+  document.getElementById(`${name}-backdrop`).classList.add('open');
+}
+function closePopover(name) {
+  document.getElementById(`${name}-backdrop`).classList.remove('open');
+}
+
+function openSheet(name) {
+  document.getElementById(`m-${name}-backdrop`).classList.add('open');
+}
+function closeSheet(name) {
+  document.getElementById(`m-${name}-backdrop`).classList.remove('open');
+}
+
+// ────────────────────────────────────────────────
+// Init
+// ────────────────────────────────────────────────
+
+window.addEventListener('DOMContentLoaded', () => {
+  initMockData();
+
+  document.getElementById('loading-screen').style.display = 'none';
+
+  updateSubtitle();
+  updatePaceChips();
+
+  // Default: open T-22
+  openWeekNumber = 22;
+  renderDesktop();
+  renderMobile();
+
+  // Mobile week nav
+  document.getElementById('m-prev-week').addEventListener('click', () => {
+    if (mobileWeekIndex > 0) { mobileWeekIndex--; renderMobile(); }
+  });
+  document.getElementById('m-next-week').addEventListener('click', () => {
+    if (mobileWeekIndex < weeks.length - 1) { mobileWeekIndex++; renderMobile(); }
+  });
+
+  // Mobile swipe
+  let touchStartX = 0;
+  document.getElementById('m-days').addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].clientX;
+  }, {passive:true});
+  document.getElementById('m-days').addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) {
+      if (dx < 0 && mobileWeekIndex < weeks.length - 1) { mobileWeekIndex++; renderMobile(); }
+      if (dx > 0 && mobileWeekIndex > 0) { mobileWeekIndex--; renderMobile(); }
+    }
+  }, {passive:true});
+
+  // Popovers open
+  document.getElementById('open-plan-settings').addEventListener('click', () => {
+    if (window.innerWidth <= 640) { syncSheetFromPlan(); openSheet('plan-settings'); }
+    else { syncPopoverFromPlan(); openPopover('plan-settings'); }
+  });
+  document.getElementById('open-ramp').addEventListener('click', () => {
+    if (window.innerWidth <= 640) { openSheet('ramp'); }
+    else { syncRampDropdown(); openPopover('ramp'); }
+  });
+  document.getElementById('open-pace-editor').addEventListener('click', () => openPopover('pace-editor'));
+  document.getElementById('pace-chip-group').addEventListener('click', (e) => {
+    if (!e.target.classList.contains('pace-edit-btn') && !e.target.closest('.pace-edit-btn')) return;
+    openPopover('pace-editor');
+  });
+  document.getElementById('open-api-key').addEventListener('click', () => {
+    document.getElementById('apikey-input').value = localStorage.getItem('anthropic_api_key') || '';
+    openPopover('apikey');
+  });
+
+  // Mobile opens
+  document.getElementById('mobile-pace-strip').addEventListener('click', () => openSheet('pace-editor'));
+  document.getElementById('plan-subtitle-text').closest('.plan-subtitle')
+    ?.querySelector('.edit-icon')?.addEventListener('click', () => {
+      if (window.innerWidth <= 640) { syncSheetFromPlan(); openSheet('plan-settings'); }
+      else { syncPopoverFromPlan(); openPopover('plan-settings'); }
+    });
+
+  // Popover closes
+  document.querySelectorAll('.popover-close').forEach(btn => {
+    btn.addEventListener('click', () => closePopover(btn.dataset.close));
+  });
+  document.querySelectorAll('.popover-backdrop').forEach(bd => {
+    bd.addEventListener('click', (e) => {
+      if (e.target === bd) closePopover(bd.id.replace('-backdrop',''));
+    });
+  });
+
+  // Sheet closes
+  document.querySelectorAll('.sheet-close').forEach(btn => {
+    btn.addEventListener('click', () => closeSheet(btn.dataset.closeSheet));
+  });
+  document.querySelectorAll('.sheet-backdrop').forEach(bd => {
+    bd.addEventListener('click', (e) => {
+      if (e.target === bd) {
+        const name = bd.id.replace('m-','').replace('-backdrop','');
+        closeSheet(name);
+      }
+    });
+  });
+
+  // Plan settings save (desktop)
+  document.getElementById('ps-save').addEventListener('click', savePlanSettings);
+  // Plan settings live-update derived fields
+  ['ps-race-date','ps-num-weeks'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updatePlanSettingsDerived);
+  });
+
+  // Plan settings save (mobile)
+  document.getElementById('m-ps-save').addEventListener('click', () => {
+    plan.plan_name = document.getElementById('m-ps-name').value;
+    plan.race_date = document.getElementById('m-ps-race-date').value;
+    plan.num_weeks = parseInt(document.getElementById('m-ps-num-weeks').value) || plan.num_weeks;
+    updateSubtitle();
+    closeSheet('plan-settings');
+  });
+  ['m-ps-race-date','m-ps-num-weeks'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      const rd = document.getElementById('m-ps-race-date').value;
+      const nw = parseInt(document.getElementById('m-ps-num-weeks').value) || 0;
+      if (rd && nw) {
+        const start = addDays(parseDate(rd), -nw * 7);
+        document.getElementById('m-ps-start-date').textContent = fmtDateShort(start);
+        document.getElementById('m-ps-race-day').textContent   = fmtDateShort(parseDate(rd));
+        document.getElementById('m-ps-week-range').textContent = `T-${nw}→T-1`;
+      }
+    });
+  });
+
+  // Pace editor save (desktop)
+  document.getElementById('pe-save').addEventListener('click', () => {
+    for (const code of PACE_CODES) {
+      plan.vdot_paces[code] = document.getElementById(`pe-${code}`).value;
+    }
+    updatePaceChips();
+    closePopover('pace-editor');
+  });
+
+  // Pace editor save (mobile)
+  document.getElementById('m-pe-save').addEventListener('click', () => {
+    for (const code of PACE_CODES) {
+      plan.vdot_paces[code] = document.getElementById(`m-pe-${code}`).value;
+    }
+    updatePaceChips();
+    closeSheet('pace-editor');
+  });
+
+  // API key save/clear
+  document.getElementById('apikey-save').addEventListener('click', () => {
+    localStorage.setItem('anthropic_api_key', document.getElementById('apikey-input').value.trim());
+    closePopover('apikey');
+  });
+  document.getElementById('apikey-clear').addEventListener('click', () => {
+    localStorage.removeItem('anthropic_api_key');
+    document.getElementById('apikey-input').value = '';
+  });
+
+  // Tag popover add button
+  document.getElementById('tag-add-btn').addEventListener('click', () => {
+    const val = document.getElementById('tag-custom-input').value.trim();
+    if (val && tagPopoverState) {
+      addTag(tagPopoverState.weekId, tagPopoverState.dayOfWeek, val);
+      closeTagPopover();
+    }
+  });
+  document.getElementById('tag-custom-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('tag-add-btn').click();
+  });
+
+  // Close tag popover on outside click
+  document.addEventListener('click', (e) => {
+    const pop = document.getElementById('tag-popover');
+    if (pop.classList.contains('open') && !pop.contains(e.target)) {
+      closeTagPopover();
+    }
+  });
+
+  // Ramp apply-from dropdown — sync mobile too
+  document.getElementById('m-ramp-apply-from').addEventListener('change', () => {
+    document.getElementById('ramp-apply-from').value =
+      document.getElementById('m-ramp-apply-from').value;
+  });
+});
+
+function syncPopoverFromPlan() {
+  if (!plan) return;
+  document.getElementById('ps-name').value      = plan.plan_name;
+  document.getElementById('ps-race-date').value = plan.race_date;
+  document.getElementById('ps-num-weeks').value = plan.num_weeks;
+  updatePlanSettingsDerived();
+}
+
+function syncSheetFromPlan() {
+  if (!plan) return;
+  document.getElementById('m-ps-name').value      = plan.plan_name;
+  document.getElementById('m-ps-race-date').value = plan.race_date;
+  document.getElementById('m-ps-num-weeks').value = plan.num_weeks;
+}
+
+function updatePlanSettingsDerived() {
+  const rd = document.getElementById('ps-race-date').value;
+  const nw = parseInt(document.getElementById('ps-num-weeks').value) || 0;
+  if (rd && nw) {
+    const start = addDays(parseDate(rd), -nw * 7);
+    document.getElementById('ps-start-date').textContent = fmtDate(start, {month:'short', day:'numeric', year:'numeric'});
+    document.getElementById('ps-race-day').textContent   = fmtDate(parseDate(rd), {month:'short', day:'numeric', year:'numeric'});
+    document.getElementById('ps-week-range').textContent = `T-${nw} → T-1`;
+  }
+}
+
+function savePlanSettings() {
+  plan.plan_name = document.getElementById('ps-name').value;
+  plan.race_date = document.getElementById('ps-race-date').value;
+  plan.num_weeks = parseInt(document.getElementById('ps-num-weeks').value) || plan.num_weeks;
+  updateSubtitle();
+  renderDesktop();
+  closePopover('plan-settings');
+}
+
+function syncRampDropdown() {
+  const sel  = document.getElementById('ramp-apply-from');
+  const msel = document.getElementById('m-ramp-apply-from');
+  sel.innerHTML  = '';
+  msel.innerHTML = '';
+  for (const wk of weeks) {
+    const label = `Week T-${wk.week_number}${wk.week_number === openWeekNumber ? ' (current)' : ''}`;
+    sel.add(new Option(label, wk.week_number));
+    msel.add(new Option(label, wk.week_number));
+  }
+  if (openWeekNumber) {
+    sel.value  = openWeekNumber;
+    msel.value = openWeekNumber;
+  }
+}
+</script>
+</body>
+</html>
