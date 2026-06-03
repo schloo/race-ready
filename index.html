@@ -1662,12 +1662,7 @@ function renderDesktop() {
   // Callout banner
   const callout = document.createElement('div');
   callout.className = 'callout-box';
-  callout.innerHTML = `
-    <span class="callout-title">Daniels 2Q Method</span>
-    Plan each week around two quality workouts (Q1 + Q2) with easy mileage filling the rest.
-    Weekly metrics track volume vs. target, week-over-week ramp, and
-    ACR (acute:chronic workload ratio) per day to flag injury risk.
-  `;
+  callout.innerHTML = `The <b>Daniels 2Q</b> marathon training methodology is meant for busy runners: It prescribes two Quality workouts per week (Q1 + Q2) with easy miles filling the remaining volume — no junk miles. This planner helps you map out each week and tracks <b>total mileage</b>, <b>long run</b>, <b>ramp rate</b>, and <b>acute:chronic workload ratio</b> to flag whether your training load is appropriate or trending toward injury risk.`;
   container.appendChild(callout);
 
   const dailyMap = buildDailyTotalsMap();
@@ -2066,11 +2061,11 @@ function buildSummaryPane(wk, wDays) {
     </div>
     <div class="sum-tile ${wowMilesCls}">
       <div class="st-val ${wowMilesCls}">${wowLabel(wowMiles)}</div>
-      <div class="st-lbl ${wowMilesCls}">week over week miles</div>
+      <div class="st-lbl ${wowMilesCls}">WoW miles</div>
     </div>
     <div class="sum-tile ${wowLongCls}">
       <div class="st-val ${wowLongCls}">${wowLabel(wowLong)}</div>
-      <div class="st-lbl ${wowLongCls}">week over week long run</div>
+      <div class="st-lbl ${wowLongCls}">WoW long run</div>
     </div>
     ${buildMixBarHTML(wDays)}
   `;
@@ -2698,8 +2693,8 @@ async function runMigration() {
     wk.phase            = data.phase;
     wk.location         = data.loc;
     wk.target_miles     = data.target;
-    wk.q1_prescription  = data.q1;
-    wk.q2_prescription  = data.q2;
+    wk.q1_prescription  = data.q1.replace(/ \/ /g, '\n');
+    wk.q2_prescription  = data.q2.replace(/ \/ /g, '\n');
     await saveWeekMeta(wk);
 
     // Build day records with Q tag assignment
@@ -2730,7 +2725,7 @@ async function runMigration() {
     days[wk.id] = dayRecords.map(d => ({...d, id: days[wk.id]?.find(x=>x.day_of_week===d.day_of_week)?.id || null}));
   }
 
-  localStorage.setItem('migV1', '1');
+  localStorage.setItem('migV2', '1');
   console.log('Migration complete.');
   renderDesktop();
   renderMobile();
@@ -2791,7 +2786,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  if (!localStorage.getItem('migV1')) {
+  if (!localStorage.getItem('migV2')) {
     const ls = document.getElementById('loading-screen');
     ls.style.display = 'flex';
     ls.innerHTML = '<div class="spinner"></div> Populating plan from spreadsheet…';
@@ -2800,7 +2795,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       await initFromSupabase();
     } catch (migErr) {
       console.error('Migration error:', migErr);
-      localStorage.setItem('migV1', '1'); // don't retry on hard failure
+      localStorage.setItem('migV2', '1'); // don't retry on hard failure
     }
     ls.style.display = 'none';
   }
