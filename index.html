@@ -2558,11 +2558,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Plan settings save (mobile)
-  document.getElementById('m-ps-save').addEventListener('click', () => {
+  document.getElementById('m-ps-save').addEventListener('click', async () => {
     plan.plan_name = document.getElementById('m-ps-name').value;
     plan.race_date = document.getElementById('m-ps-race-date').value;
     plan.num_weeks = parseInt(document.getElementById('m-ps-num-weeks').value) || plan.num_weeks;
+    await savePlanMeta();
+    await ensureWeeksExist(plan.id, plan.num_weeks);
+    const rawWeeks = await loadWeeks(plan.id);
+    weeks = rawWeeks || [];
+    for (const wk of weeks) if (!days[wk.id]) days[wk.id] = [];
     updateSubtitle();
+    renderDesktop();
+    renderMobile();
     closeSheet('plan-settings');
   });
   ['m-ps-race-date','m-ps-num-weeks'].forEach(id => {
@@ -2628,12 +2635,163 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Ramp apply-from dropdown — sync mobile too
+  // Ramp apply-from dropdown — sync desktop↔mobile
   document.getElementById('m-ramp-apply-from').addEventListener('change', () => {
     document.getElementById('ramp-apply-from').value =
       document.getElementById('m-ramp-apply-from').value;
   });
+  document.getElementById('ramp-apply-from').addEventListener('change', () => {
+    document.getElementById('m-ramp-apply-from').value =
+      document.getElementById('ramp-apply-from').value;
+  });
+
+  // Sync ramp dropdown when mobile sheet opens
+  document.getElementById('open-ramp').addEventListener('click', () => {
+    syncRampDropdown();
+  }, true); // capture phase so it runs before the existing handler
+
+  // Ramp generate buttons
+  document.getElementById('ramp-generate').addEventListener('click', () => generateRamp('ramp'));
+  document.getElementById('m-ramp-generate').addEventListener('click', () => generateRamp('m-ramp'));
 });
+
+// ────────────────────────────────────────────────
+// Mileage ramp — Anthropic API
+// ────────────────────────────────────────────────
+
+async function generateRamp(prefix) {
+  const startMi   = parseFloat(document.getElementById(`${prefix === 'ramp' ? '' : 'm-'}ramp-start-mi`.replace('--','-')).value);
+  const peakMi    = parseFloat(document.getElementById(`${prefix === 'ramp' ? '' : 'm-'}ramp-peak-mi`.replace('--','-')).value);
+  const desc      = document.getElementById(`${prefix === 'ramp' ? '' : 'm-'}ramp-description`.replace('--','-')).value.trim();
+  const applyFrom = parseInt(document.getElementById(`${prefix === 'ramp' ? '' : 'm-'}ramp-apply-from`.replace('--','-')).value);
+
+  // Resolve element IDs cleanly
+  const idStart = prefix === 'ramp' ? 'ramp-start-mi'   : 'm-ramp-start-mi';
+  const idPeak  = prefix === 'ramp' ? 'ramp-peak-mi'    : 'm-ramp-peak-mi';
+  const idDesc  = prefix === 'ramp' ? 'ramp-description': 'm-ramp-description';
+  const idFrom  = prefix === 'ramp' ? 'ramp-apply-from' : 'm-ramp-apply-from';
+  const idErr   = prefix === 'ramp' ? 'ramp-error'      : 'm-ramp-error';
+  const idBtn   = prefix === 'ramp' ? 'ramp-generate'   : 'm-ramp-generate';
+
+  const startMiles = parseFloat(document.getElementById(idStart).value);
+  const peakMiles  = parseFloat(document.getElementById(idPeak).value);
+  const description= document.getElementById(idDesc).value.trim();
+  const fromWeek   = parseInt(document.getElementById(idFrom).value);
+  const errEl      = document.getElementById(idErr);
+  const btnEl      = document.getElementById(idBtn);
+
+  // Validate inputs
+  errEl.classList.remove('visible');
+  if (!startMiles || !peakMiles || !description || !fromWeek) {
+    showRampError(errEl, 'Please fill in all fields before generating.');
+    return;
+  }
+
+  const apiKey = localStorage.getItem('anthropic_api_key');
+  if (!apiKey) {
+    showRampError(errEl, 'No API key found. Click the key icon in the topbar to add your Anthropic API key.');
+    return;
+  }
+
+  // The weeks we'll generate for: fromWeek down to 1
+  const targetWeeks = weeks.filter(w => w.week_number <= fromWeek).map(w => w.week_number);
+  const count = targetWeeks.length;
+
+  btnEl.disabled = true;
+  btnEl.innerHTML = '<i class="ti ti-loader" style="font-size:12px;animation:spin 0.7s linear infinite"></i> Generating…';
+
+  const systemPrompt = `You are a marathon training planner. Given a mileage ramp description, generate weekly mileage targets.
+Race is in ${count} weeks from the starting week.
+Starting mileage: ${startMiles} miles/week.
+Peak mileage: ${peakMiles} miles/week.
+Ramp description: ${description}
+Return ONLY a valid JSON array with no preamble, no markdown, no explanation:
+[{"week_number": ${fromWeek}, "target_miles": ${startMiles}}, ...]
+Week numbers count DOWN to 1 (race week). Generate ${count} entries from week ${fromWeek} down to week 1.`;
+
+  let rawText = '';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: systemPrompt }],
+      }),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`API error ${res.status}: ${errBody}`);
+    }
+
+    const data = await res.json();
+    rawText = data?.content?.[0]?.text || '';
+  } catch (e) {
+    showRampError(errEl, `Failed to reach Anthropic API: ${e.message}`);
+    resetRampBtn(btnEl);
+    return;
+  }
+
+  // Parse JSON — strip any accidental markdown fences
+  let parsed;
+  try {
+    const cleaned = rawText.replace(/^```json?\s*/i, '').replace(/```\s*$/,'').trim();
+    parsed = JSON.parse(cleaned);
+  } catch (e) {
+    showRampError(errEl,
+      `Claude returned a response that couldn't be parsed as JSON. ` +
+      `Try again or simplify your ramp description.\n\nRaw response: ${rawText.substring(0, 200)}`
+    );
+    resetRampBtn(btnEl);
+    return;
+  }
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    showRampError(errEl, 'Claude returned an unexpected format. Expected a JSON array of {week_number, target_miles}.');
+    resetRampBtn(btnEl);
+    return;
+  }
+
+  // Apply targets to weeks and save
+  try {
+    for (const entry of parsed) {
+      const wk = weeks.find(w => w.week_number === entry.week_number);
+      if (wk && entry.target_miles != null) {
+        wk.target_miles = parseFloat(entry.target_miles) || 0;
+        await saveWeekMeta(wk);
+      }
+    }
+  } catch (e) {
+    showRampError(errEl, `Generated targets but failed to save to database: ${e.message}`);
+    resetRampBtn(btnEl);
+    return;
+  }
+
+  // Re-render
+  renderDesktop();
+  renderMobile();
+  resetRampBtn(btnEl);
+
+  if (prefix === 'ramp') closePopover('ramp');
+  else closeSheet('ramp');
+}
+
+function showRampError(el, msg) {
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function resetRampBtn(btn) {
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-wand" style="font-size:12px"></i> Generate weekly targets ↗';
+}
 
 function syncPopoverFromPlan() {
   if (!plan) return;
