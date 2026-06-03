@@ -873,6 +873,11 @@ body {
   .m-day-acr.blue   { background: var(--acr-blue-bg);   color: var(--acr-blue-text); }
   .m-day-acr.purple { background: var(--acr-purple-bg); color: var(--acr-purple-text); }
 
+  /* Mobile tag tap-to-remove */
+  .m-tag-x { display: none; font-size: 10px; margin-left: 1px; }
+  .m-dtag.m-selected { outline: 1.5px solid var(--cool-border); outline-offset: 1px; }
+  .m-dtag.m-selected .m-tag-x { display: inline; }
+
   .m-q-hint {
     font-size: 10px;
     color: var(--text-secondary);
@@ -2178,23 +2183,63 @@ function renderMobile() {
                 : (hasQ2 && wk.q2_prescription) ? wk.q2_prescription.replace(/\n/g,' · ')
                 : null;
 
-    // Tags HTML
-    const tagsHTML = tags.map(t => {
+    // Build tag elements with tap-to-remove behavior
+    const tagsEl = document.createElement('div');
+    tagsEl.className = 'm-day-tags';
+    for (const t of tags) {
       const isQ = t === 'Q1' || t === 'Q2';
-      return `<span class="m-dtag ${isQ ? (t==='Q1'?'q1':'q2') : 'activity'}">${t}</span>`;
-    }).join('') + `<span class="m-dtag plus">+</span>`;
+      const span = document.createElement('span');
+      span.className = `m-dtag ${isQ ? (t === 'Q1' ? 'q1' : 'q2') : 'activity'}`;
+      span.dataset.tag = t;
+      span.dataset.weekId = wk.id;
+      span.dataset.day = d;
+      const txt = document.createTextNode(t);
+      const x = document.createElement('span');
+      x.className = 'm-tag-x';
+      x.textContent = ' ×';
+      x.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeTag(wk.id, d, t);
+        renderMobile();
+      });
+      span.appendChild(txt);
+      span.appendChild(x);
+      // Tap to select (shows ×), tap again or tap × to deselect
+      span.addEventListener('click', (e) => {
+        if (e.target === x) return;
+        const already = span.classList.contains('m-selected');
+        document.querySelectorAll('.m-dtag.m-selected').forEach(s => s.classList.remove('m-selected'));
+        if (!already) span.classList.add('m-selected');
+      });
+      tagsEl.appendChild(span);
+    }
+    const plusSpan = document.createElement('span');
+    plusSpan.className = 'm-dtag plus';
+    plusSpan.textContent = '+';
+    plusSpan.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openTagPopover(wk.id, d, plusSpan);
+    });
+    tagsEl.appendChild(plusSpan);
 
     row.innerHTML = `
       <div class="m-day-header">
         <div class="m-day-left">
           <span class="m-day-name">${DAY_NAMES[d]}</span>
           <span class="m-day-date">${fmtDate(date,{month:'short',day:'numeric'})}</span>
-          <div class="m-day-tags">${tagsHTML}</div>
         </div>
         ${acrHTML}
-      </div>
-      ${qHint ? `<div class="m-q-hint">${escHtml(qHint)}</div>` : ''}
-      <table class="m-pace-table">
+      </div>`;
+    row.querySelector('.m-day-left').appendChild(tagsEl);
+    if (qHint) {
+      const hint = document.createElement('div');
+      hint.className = 'm-q-hint';
+      hint.textContent = qHint;
+      row.appendChild(hint);
+    }
+    // Append pace table separately below
+    const paceTbl = document.createElement('div');
+    paceTbl.innerHTML = `<table class="m-pace-table">
         <thead><tr>
           <th class="E">E</th><th class="M">M</th><th class="T">T</th>
           <th class="I">I</th><th class="R">R</th><th class="tot">tot</th>
@@ -2208,6 +2253,8 @@ function renderMobile() {
         </tr></tbody>
       </table>
     `;
+
+    row.appendChild(paceTbl.firstChild);
 
     // Wire inputs
     row.querySelectorAll('.m-pace-input').forEach(inp => {
