@@ -1353,9 +1353,9 @@ body {
 </div>
 
 <script>
-// ── Config (replace before deploy) ──
-const SUPABASE_URL  = 'REPLACE_WITH_SUPABASE_URL';
-const SUPABASE_ANON = 'REPLACE_WITH_SUPABASE_ANON_KEY';
+// ── Config ──
+const SUPABASE_URL  = 'https://kmzbdoxfhrksimfgxhdb.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttemJkb3hmaHJrc2ltZmd4aGRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDI4MTgsImV4cCI6MjA5NjA3ODgxOH0.VodAh9hX35OT69GGPvn0aATC2gl2cu5mzDMjqbzh9LM';
 
 // ── In-memory state ──
 let plan  = null;   // { id, plan_name, race_date, num_weeks, vdot_paces }
@@ -2268,73 +2268,165 @@ function autoResizeTextarea(ta) {
 // Supabase stubs (wired in Step 5)
 // ────────────────────────────────────────────────
 
-async function saveWeekMeta(wk) { /* Step 5 */ }
-async function saveDayData(day) { /* Step 5 */ }
-
 // ────────────────────────────────────────────────
-// Bootstrap with mock data
+// Supabase API helpers
 // ────────────────────────────────────────────────
 
-function initMockData() {
-  plan = {
-    id: 'mock-plan-1',
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': `Bearer ${SUPABASE_ANON}`,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || 'return=representation',
+      ...opts.headers,
+    },
+    ...opts,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Supabase error ${res.status}: ${err}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function sbGet(path)         { return sbFetch(path, { method: 'GET' }); }
+async function sbPost(path, body)  { return sbFetch(path, { method: 'POST',  body: JSON.stringify(body) }); }
+async function sbPatch(path, body) { return sbFetch(path, { method: 'PATCH', body: JSON.stringify(body), prefer: 'return=minimal' }); }
+
+// ────────────────────────────────────────────────
+// Supabase load / save
+// ────────────────────────────────────────────────
+
+async function loadPlan() {
+  const plans = await sbGet('/plans?select=*&limit=1&order=created_at.asc');
+  if (plans && plans.length > 0) return plans[0];
+
+  // First run — create a default plan
+  const created = await sbPost('/plans', {
     plan_name: 'NYC Marathon 2026',
     race_date: '2026-11-01',
     num_weeks: 26,
-    vdot_paces: { E:'10:12', M:'8:47', T:'8:20', I:'7:45', R:'7:15' }
+    vdot_paces: { E:'10:12', M:'8:47', T:'8:20', I:'7:45', R:'7:15' },
+  });
+  return created[0];
+}
+
+async function loadWeeks(planId) {
+  return sbGet(`/weeks?plan_id=eq.${planId}&select=*&order=week_number.desc`);
+}
+
+async function loadDays(planId) {
+  // Join through weeks to get all days for the plan in one query
+  return sbGet(`/days?select=*,weeks!inner(plan_id)&weeks.plan_id=eq.${planId}&order=day_of_week.asc`);
+}
+
+async function ensureWeeksExist(planId, numWeeks) {
+  // Fetch existing week numbers
+  const existing = await sbGet(`/weeks?plan_id=eq.${planId}&select=week_number`);
+  const existingNums = new Set((existing || []).map(w => w.week_number));
+
+  const phases = {
+    26:1,25:1,24:1,23:1,22:1,21:1,20:1,19:1,
+    18:2,17:2,16:2,15:2,
+    14:3,13:3,12:3,11:3,
+    10:4,9:4,8:4,7:4,6:4,5:4,4:4,
+    3:5,2:5,1:5
   };
+  const phaseNames = ['Foundation','Initial Quality','Transition Quality','Final Quality','Taper'];
 
-  const phases = ['Foundation','Foundation','Foundation','Foundation',
-    'Foundation','Foundation','Foundation','Foundation',
-    'Initial Quality','Initial Quality','Initial Quality','Initial Quality',
-    'Transition Quality','Transition Quality','Transition Quality','Transition Quality',
-    'Final Quality','Final Quality','Final Quality','Final Quality',
-    'Final Quality','Final Quality','Final Quality',
-    'Taper','Taper','Taper'];
-
-  weeks = [];
-  days  = {};
-  for (let n = 26; n >= 1; n--) {
-    const wk = {
-      id: `mock-wk-${n}`,
-      plan_id: plan.id,
-      week_number: n,
-      phase: phases[26 - n] || 'Foundation',
-      location: 'New York',
-      target_miles: 0,
-      q1_prescription: '',
-      q2_prescription: '',
-    };
-    weeks.push(wk);
-    days[wk.id] = [];
-  }
-
-  // Seed T-22 with the mockup data
-  const wk22 = weeks.find(w => w.week_number === 22);
-  if (wk22) {
-    wk22.target_miles = 22;
-    wk22.q1_prescription = '2 Easy\n3×1T w/1 min rests\n8×200R w/200 jg\n1 Easy';
-    wk22.q2_prescription = '2 Easy\n4×1T w/1 min rests\n2 Easy';
-    days[wk22.id] = [
-      {id:'d0',week_id:wk22.id,day_of_week:0,easy_miles:0,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:[]},
-      {id:'d1',week_id:wk22.id,day_of_week:1,easy_miles:4,marathon_miles:0,threshold_miles:3,interval_miles:0,repetition_miles:1,tags:['Q1','swim']},
-      {id:'d2',week_id:wk22.id,day_of_week:2,easy_miles:0,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:['barre']},
-      {id:'d3',week_id:wk22.id,day_of_week:3,easy_miles:3.5,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:[]},
-      {id:'d4',week_id:wk22.id,day_of_week:4,easy_miles:4,marathon_miles:0,threshold_miles:3,interval_miles:0,repetition_miles:0,tags:['Q2']},
-      {id:'d5',week_id:wk22.id,day_of_week:5,easy_miles:4.5,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:[]},
-      {id:'d6',week_id:wk22.id,day_of_week:6,easy_miles:0,marathon_miles:0,threshold_miles:0,interval_miles:0,repetition_miles:0,tags:['rest']},
-    ];
-  }
-  // Seed some prior weeks for ACR
-  for (let n = 23; n <= 26; n++) {
-    const wk = weeks.find(w => w.week_number === n);
-    if (wk) {
-      days[wk.id] = [0,1,2,3,4,5,6].map(d => ({
-        id:`seed-${n}-${d}`, week_id:wk.id, day_of_week:d,
-        easy_miles: d===0||d===6 ? 0 : [5,4,6,5,4,7,0][d],
-        marathon_miles:0, threshold_miles:0, interval_miles:0, repetition_miles:0, tags:[]
-      }));
+  const toInsert = [];
+  for (let n = numWeeks; n >= 1; n--) {
+    if (!existingNums.has(n)) {
+      const phaseIdx = (phases[n] || 1) - 1;
+      toInsert.push({
+        plan_id: planId,
+        week_number: n,
+        phase: phaseNames[phaseIdx],
+        location: 'New York',
+        target_miles: 0,
+        q1_prescription: '',
+        q2_prescription: '',
+      });
     }
+  }
+
+  if (toInsert.length > 0) {
+    await sbPost('/weeks', toInsert);
+  }
+}
+
+async function saveWeekMeta(wk) {
+  await sbPatch(
+    `/weeks?id=eq.${wk.id}`,
+    {
+      phase: wk.phase,
+      location: wk.location,
+      target_miles: wk.target_miles,
+      q1_prescription: wk.q1_prescription,
+      q2_prescription: wk.q2_prescription,
+    }
+  );
+}
+
+async function savePlanMeta() {
+  await sbPatch(`/plans?id=eq.${plan.id}`, {
+    plan_name:  plan.plan_name,
+    race_date:  plan.race_date,
+    num_weeks:  plan.num_weeks,
+    vdot_paces: plan.vdot_paces,
+  });
+}
+
+async function saveDayData(day) {
+  if (!day.id) {
+    // New day — insert
+    const result = await sbPost('/days', {
+      week_id:          day.week_id,
+      day_of_week:      day.day_of_week,
+      easy_miles:       day.easy_miles       || 0,
+      marathon_miles:   day.marathon_miles   || 0,
+      threshold_miles:  day.threshold_miles  || 0,
+      interval_miles:   day.interval_miles   || 0,
+      repetition_miles: day.repetition_miles || 0,
+      tags:             day.tags             || [],
+    });
+    if (result && result[0]) day.id = result[0].id;
+  } else {
+    await sbPatch(`/days?id=eq.${day.id}`, {
+      easy_miles:       day.easy_miles       || 0,
+      marathon_miles:   day.marathon_miles   || 0,
+      threshold_miles:  day.threshold_miles  || 0,
+      interval_miles:   day.interval_miles   || 0,
+      repetition_miles: day.repetition_miles || 0,
+      tags:             day.tags             || [],
+    });
+  }
+}
+
+// ────────────────────────────────────────────────
+// Bootstrap from Supabase
+// ────────────────────────────────────────────────
+
+async function initFromSupabase() {
+  plan = await loadPlan();
+  await ensureWeeksExist(plan.id, plan.num_weeks);
+
+  const rawWeeks = await loadWeeks(plan.id);
+  weeks = rawWeeks || [];
+
+  // Initialize empty days arrays
+  days = {};
+  for (const wk of weeks) days[wk.id] = [];
+
+  // Load all days for this plan
+  const rawDays = await sbGet(
+    `/days?week_id=in.(${weeks.map(w => w.id).join(',')})&select=*&order=day_of_week.asc`
+  );
+  for (const day of (rawDays || [])) {
+    if (!days[day.week_id]) days[day.week_id] = [];
+    days[day.week_id].push(day);
   }
 }
 
@@ -2360,16 +2452,30 @@ function closeSheet(name) {
 // Init
 // ────────────────────────────────────────────────
 
-window.addEventListener('DOMContentLoaded', () => {
-  initMockData();
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await initFromSupabase();
+  } catch (e) {
+    console.error('Failed to load from Supabase:', e);
+    document.getElementById('loading-screen').innerHTML =
+      `<span style="color:#A32D2D">⚠ Could not connect to database. Check console for details.</span>`;
+    return;
+  }
 
   document.getElementById('loading-screen').style.display = 'none';
 
   updateSubtitle();
   updatePaceChips();
 
-  // Default: open T-22
-  openWeekNumber = 22;
+  // Open the current week (or T-1 fallback)
+  const today = new Date();
+  const currentWk = weeks.find(wk => {
+    const start = weekStartDate(plan.race_date, wk.week_number);
+    return today >= start && today <= addDays(start, 6);
+  });
+  openWeekNumber = currentWk ? currentWk.week_number : (weeks[0]?.week_number ?? null);
+  mobileWeekIndex = currentWk ? weeks.indexOf(currentWk) : 0;
+
   renderDesktop();
   renderMobile();
 
@@ -2473,19 +2579,21 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Pace editor save (desktop)
-  document.getElementById('pe-save').addEventListener('click', () => {
+  document.getElementById('pe-save').addEventListener('click', async () => {
     for (const code of PACE_CODES) {
       plan.vdot_paces[code] = document.getElementById(`pe-${code}`).value;
     }
+    await savePlanMeta();
     updatePaceChips();
     closePopover('pace-editor');
   });
 
   // Pace editor save (mobile)
-  document.getElementById('m-pe-save').addEventListener('click', () => {
+  document.getElementById('m-pe-save').addEventListener('click', async () => {
     for (const code of PACE_CODES) {
       plan.vdot_paces[code] = document.getElementById(`m-pe-${code}`).value;
     }
+    await savePlanMeta();
     updatePaceChips();
     closeSheet('pace-editor');
   });
@@ -2553,12 +2661,18 @@ function updatePlanSettingsDerived() {
   }
 }
 
-function savePlanSettings() {
+async function savePlanSettings() {
   plan.plan_name = document.getElementById('ps-name').value;
   plan.race_date = document.getElementById('ps-race-date').value;
   plan.num_weeks = parseInt(document.getElementById('ps-num-weeks').value) || plan.num_weeks;
+  await savePlanMeta();
+  await ensureWeeksExist(plan.id, plan.num_weeks);
+  const rawWeeks = await loadWeeks(plan.id);
+  weeks = rawWeeks || [];
+  for (const wk of weeks) if (!days[wk.id]) days[wk.id] = [];
   updateSubtitle();
   renderDesktop();
+  renderMobile();
   closePopover('plan-settings');
 }
 
