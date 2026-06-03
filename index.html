@@ -411,8 +411,8 @@ body {
   min-width: 480px;
   table-layout: fixed;
 }
-.cal-grid colgroup col.rl-col  { width: 68px; }
-.cal-grid colgroup col.day-col { width: calc((100% - 68px) / 7); }
+.cal-grid colgroup col.rl-col  { width: 88px; }
+.cal-grid colgroup col.day-col { width: calc((100% - 88px) / 7); }
 
 .cal-grid th {
   font-size: 11px;
@@ -425,7 +425,7 @@ body {
   background: #fff;
 }
 .cal-grid th:last-child { border-right: none; }
-.cal-grid th.rl { text-align: left; background: var(--cool-bg); font-size: 10px; }
+.cal-grid th.rl { text-align: left; background: #fff; font-size: 10px; }
 
 .cal-grid td {
   padding: 3px;
@@ -446,6 +446,18 @@ body {
 
 .day-head-name { font-size: 11px; font-weight: 500; }
 .day-head-date { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+.day-q-chip {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--q-bg);
+  color: var(--q-text);
+  margin-top: 2px;
+}
 
 /* Pace row labels */
 .pace-lbl {
@@ -468,23 +480,26 @@ body {
   border: 0.5px solid var(--cool-border);
 }
 
-/* Pace inputs */
+/* Pace inputs — spreadsheet style */
 .pace-input {
-  width: 36px;
-  border: 0.5px solid var(--cool-border);
-  border-radius: 4px;
-  padding: 2px 2px;
-  font-size: 11px;
-  text-align: right;
-  background: #fff;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  padding: 3px 4px;
+  font-size: 12px;
+  text-align: center;
+  background: transparent;
   font-family: var(--font-sans);
+  color: var(--text-primary);
+  cursor: default;
 }
-.pace-input:focus { outline: none; border-color: #aaa; }
-.pace-input.E { color: var(--e-text); border-color: var(--e-border); }
-.pace-input.M { color: var(--m-text); border-color: var(--m-border); }
-.pace-input.T { color: var(--t-text); border-color: var(--t-border); }
-.pace-input.I { color: var(--i-text); border-color: var(--i-border); }
-.pace-input.R { color: var(--r-text); border-color: var(--r-border); }
+.pace-input:focus {
+  outline: none;
+  background: #fffde7;
+  cursor: text;
+}
+/* Highlight the whole cell when input is focused */
+.cal-grid td:has(.pace-input:focus) { background: #fffde7 !important; }
 
 /* Total row */
 .tot-row td {
@@ -502,7 +517,7 @@ body {
 .tot-row td.tot-val { background: #fff !important; font-weight: 500; color: var(--text-primary); }
 
 /* ACR row */
-.acr-row td.rl { background: var(--cool-bg) !important; font-size: 11px; color: var(--text-secondary); }
+.acr-row td.rl { background: #fff !important; font-size: 11px; color: var(--text-secondary); }
 .acr-cell { font-size: 11px; font-weight: 500; }
 .acr-cell.purple { background: var(--acr-purple-bg) !important; color: var(--acr-purple-text); }
 .acr-cell.blue   { background: var(--acr-blue-bg)   !important; color: var(--acr-blue-text); }
@@ -1893,36 +1908,23 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   // thead: day headers
   const thead = document.createElement('thead');
 
-  // Row 1: day names + dates
+  // Pre-compute which day has Q1/Q2
+  const q1DayInGrid = wDays.find(x => (x.tags||[]).includes('Q1'))?.day_of_week ?? -1;
+  const q2DayInGrid = wDays.find(x => (x.tags||[]).includes('Q2'))?.day_of_week ?? -1;
+
+  // Row 1: day names + dates + Q chip if assigned
   const hdrRow = document.createElement('tr');
   hdrRow.innerHTML = '<th class="rl"></th>';
   for (let d = 0; d < 7; d++) {
     const date = addDays(wStart, d);
+    const qLabel = d === q1DayInGrid ? 'Q1' : d === q2DayInGrid ? 'Q2' : null;
     hdrRow.innerHTML += `<th>
       <div class="day-head-name">${DAY_NAMES[d]}</div>
       <div class="day-head-date">${fmtDate(date, {month:'short', day:'numeric'})}</div>
+      ${qLabel ? `<div class="day-q-chip">${qLabel}</div>` : ''}
     </th>`;
   }
   thead.appendChild(hdrRow);
-
-  // Row 2: Q tags (read-only — assigned via Q row dropdowns)
-  const tagRow = document.createElement('tr');
-  tagRow.innerHTML = '<td class="rl"></td>';
-  for (let d = 0; d < 7; d++) {
-    const dayData = wDays.find(x => x.day_of_week === d);
-    const tags = dayData ? (dayData.tags || []) : [];
-    const td = document.createElement('td');
-    td.className = 'tag-cell';
-    const qTag = tags.find(t => t === 'Q1' || t === 'Q2');
-    if (qTag) {
-      const chip = document.createElement('span');
-      chip.className = 'tag Q';
-      chip.textContent = qTag;
-      td.appendChild(chip);
-    }
-    tagRow.appendChild(td);
-  }
-  thead.appendChild(tagRow);
   table.appendChild(thead);
 
   // tbody: pace rows + total + ACR
@@ -1940,14 +1942,17 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
       inp.type = 'number';
       inp.min = '0';
       inp.step = '0.5';
-      inp.className = `pace-input ${PACE_CODES[pi]}`;
+      inp.className = 'pace-input';
       inp.value = val || '';
-      inp.placeholder = '0';
+      inp.placeholder = '—';
       inp.dataset.weekId = wk.id;
       inp.dataset.dayOfWeek = d;
       inp.dataset.field = fieldKey;
+      inp.dataset.paceRow = pi;
+      inp.dataset.paceDay = d;
       inp.addEventListener('change', onPaceInputChange);
       inp.addEventListener('blur', onPaceInputBlur);
+      inp.addEventListener('keydown', onPaceInputKeydown);
       td.appendChild(inp);
       tr.appendChild(td);
     }
@@ -1957,7 +1962,7 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   // Total row
   const totRow = document.createElement('tr');
   totRow.className = 'tot-row';
-  totRow.innerHTML = `<td class="rl"><span class="pace-lbl tot">Total</span></td>`;
+  totRow.innerHTML = `<td class="rl" style="background:#fff!important">Total</td>`;
   for (let d = 0; d < 7; d++) {
     const dayData = wDays.find(x => x.day_of_week === d);
     const tot = dayData ? roundMi(dayTotal(dayData)) : 0;
@@ -2051,7 +2056,9 @@ function buildSummaryPane(wk, wDays) {
   const diff = wk.target_miles > 0 ? roundMi(total - wk.target_miles) : null;
   const diffCls = vsTargetClass(diff);
   const diffStr = diff === null ? '—' : (diff >= 0 ? `+${diff} mi` : `${diff} mi`);
-  const diffLbl = diff === null ? '—' : `${roundMi(total)} of ${wk.target_miles} weekly miles`;
+  const diffLbl = diff === null
+    ? `${roundMi(total)} mi planned`
+    : `${roundMi(total)} of ${wk.target_miles} mi target`;
 
   // WoW miles
   const prevWk = weeks.find(w => w.week_number === wk.week_number + 1);
@@ -2187,6 +2194,29 @@ function onPaceInputBlur(e) {
   ensureDayExists(weekId, dayOfWeek);
   const day = days[weekId].find(d => d.day_of_week === dayOfWeek);
   saveDayData(day);
+}
+
+function onPaceInputKeydown(e) {
+  const dirs = { ArrowLeft:-1, ArrowRight:1 };
+  const vertDirs = { ArrowUp:-1, ArrowDown:1 };
+  if (!dirs[e.key] && !vertDirs[e.key]) return;
+
+  e.preventDefault();
+  const inp = e.target;
+  const table = inp.closest('table');
+  if (!table) return;
+
+  const curRow = parseInt(inp.dataset.paceRow);
+  const curDay = parseInt(inp.dataset.paceDay);
+
+  let targetRow = curRow, targetDay = curDay;
+  if (dirs[e.key])     targetDay = Math.max(0, Math.min(6, curDay + dirs[e.key]));
+  if (vertDirs[e.key]) targetRow = Math.max(0, Math.min(4, curRow + vertDirs[e.key]));
+
+  const next = table.querySelector(
+    `input[data-pace-row="${targetRow}"][data-pace-day="${targetDay}"]`
+  );
+  if (next) next.focus();
 }
 
 function ensureDayExists(weekId, dayOfWeek) {
