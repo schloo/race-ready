@@ -378,6 +378,7 @@ body {
 
 /* ── Week inner: grid + summary panel ── */
 /* Week body: Q column | grid | summary side by side */
+/* Outer tile */
 .week-body {
   display: flex;
   flex-direction: row;
@@ -387,15 +388,24 @@ body {
   overflow: hidden;
 }
 
-/* Q column on the left */
+/* Q panel on the left: target | Q1 | Q2 horizontally */
 .q-column {
-  display: flex;
-  flex-direction: column;
-  width: 190px;
-  min-width: 190px;
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr;
+  width: 340px;
+  min-width: 340px;
   flex-shrink: 0;
   border-right: 0.5px solid var(--cool-border);
   background: #fff;
+}
+.q-column > * + * { border-left: 0.5px solid var(--cool-border); }
+
+/* Grid row fills remaining space */
+.week-grid-row {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-width: 0;
 }
 
 .grid-pane {
@@ -469,11 +479,11 @@ body {
   border-radius: 4px;
   white-space: nowrap;
 }
-.pace-lbl.E { background: var(--e-bg); color: var(--e-text); }
-.pace-lbl.M { background: var(--m-bg); color: var(--m-text); }
-.pace-lbl.T { background: var(--t-bg); color: var(--t-text); }
-.pace-lbl.I { background: var(--i-bg); color: var(--i-text); }
-.pace-lbl.R { background: var(--r-bg); color: var(--r-text); }
+.pace-lbl.E { background: var(--e-bg); color: #1a1a1a; }
+.pace-lbl.M { background: var(--m-bg); color: #1a1a1a; }
+.pace-lbl.T { background: var(--t-bg); color: #1a1a1a; }
+.pace-lbl.I { background: var(--i-bg); color: #1a1a1a; }
+.pace-lbl.R { background: var(--r-bg); color: #1a1a1a; }
 .pace-lbl.tot {
   background: #fff;
   color: var(--text-secondary);
@@ -1587,7 +1597,7 @@ const DAY_NAMES  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const PACE_KEYS  = ['easy','marathon','threshold','interval','repetition'];
 const PACE_LABELS= ['Easy','Marathon','Threshold','Interval','Repetition'];
 const PACE_CODES = ['E','M','T','I','R'];
-const PACE_COLORS= ['#fff8cc','#ffe3b0','#ffd4c2','#fcc8c8','#e8d0f0'];
+const PACE_COLORS= ['#f0d840','#f0aa40','#f09070','#ee6060','#c090d8'];
 
 const PHASE_DESCS = {
   'Foundation':        'Build aerobic base. Easy mileage, strides, light strength work.',
@@ -1871,6 +1881,12 @@ function buildOpenWeekBlock(wk, dailyMap) {
     </select>`;
   }
 
+  const NO_Q_MSG = 'No Q sessions this week; Easy runs all week + 6–8 strides';
+  const isNoQ = (wk.q1_prescription || '').toLowerCase().startsWith('no q');
+
+  const q1Text = isNoQ ? NO_Q_MSG : (wk.q1_prescription || '');
+  const q2Text = isNoQ ? NO_Q_MSG : (wk.q2_prescription || '');
+
   qRow.innerHTML = `
     <div class="q-target-cell">
       <div class="q-target-hdr">Weekly Target</div>
@@ -1880,23 +1896,17 @@ function buildOpenWeekBlock(wk, dailyMap) {
         <span class="q-target-unit">miles</span>
       </div>
     </div>
-    <div class="q-cell editable-cell">
-      <div class="q-label-row">
-        <span class="qlbl">Q1</span>
-        <span class="q-day-lbl">→</span>
-        ${daySelectHTML('Q1', q1Day)}
-      </div>
+    <div class="q-cell ${isNoQ ? '' : 'editable-cell'}">
+      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q1</span><span class="q-day-lbl">→</span>${daySelectHTML('Q1', q1Day)}</div>`}
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription"
-        placeholder="Q1 workout prescription…">${escHtml(wk.q1_prescription||'')}</textarea>
+        ${isNoQ ? 'readonly style="color:var(--text-tertiary)"' : ''}
+        placeholder="Q1 workout prescription…">${escHtml(q1Text)}</textarea>
     </div>
-    <div class="q-cell editable-cell">
-      <div class="q-label-row">
-        <span class="qlbl">Q2</span>
-        <span class="q-day-lbl">→</span>
-        ${daySelectHTML('Q2', q2Day)}
-      </div>
+    <div class="q-cell ${isNoQ ? '' : 'editable-cell'}">
+      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q2</span><span class="q-day-lbl">→</span>${daySelectHTML('Q2', q2Day)}</div>`}
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription"
-        placeholder="Q2 workout prescription…">${escHtml(wk.q2_prescription||'')}</textarea>
+        ${isNoQ ? 'readonly style="color:var(--text-tertiary)"' : ''}
+        placeholder="Q2 workout prescription…">${escHtml(q2Text)}</textarea>
     </div>
   `;
 
@@ -1927,23 +1937,24 @@ function buildOpenWeekBlock(wk, dailyMap) {
     });
   });
 
-  // Week body: Q column | grid | summary (all side by side)
+  // Week body: [Q panel: target|Q1|Q2] | [grid] | [summary]
   const body = document.createElement('div');
   body.className = 'week-body';
 
-  // Q column (left)
   qRow.className = 'q-column';
   body.appendChild(qRow);
 
-  // Grid pane (center)
+  // Grid + summary fill remaining width
+  const gridRow = document.createElement('div');
+  gridRow.className = 'week-grid-row';
+
   const gridPane = document.createElement('div');
   gridPane.className = 'grid-pane';
   gridPane.appendChild(buildCalGrid(wk, wStart, wDays, dailyMap));
-  body.appendChild(gridPane);
+  gridRow.appendChild(gridPane);
+  gridRow.appendChild(buildSummaryPane(wk, wDays));
 
-  // Summary pane (right)
-  body.appendChild(buildSummaryPane(wk, wDays));
-
+  body.appendChild(gridRow);
   block.appendChild(body);
   return block;
 }
@@ -2869,18 +2880,34 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('loading-screen').style.display = 'none';
 
+  // Seed goal paces if not yet set
+  if (!plan.vdot_paces.E_goal) {
+    plan.vdot_paces.E_goal = '10:30';
+    plan.vdot_paces.M_goal = '8:45';
+    plan.vdot_paces.T_goal = '8:20';
+    plan.vdot_paces.I_goal = '7:45';
+    plan.vdot_paces.R_goal = '7:00';
+    await savePlanMeta();
+  }
+
   updateSubtitle();
   updatePaceChips();
 
-  // Open the current week (or T-1 fallback)
+  // Default: past weeks collapsed, current + future weeks expanded
   const today = new Date();
-  const currentWk = weeks.find(wk => {
-    const start = weekStartDate(plan.race_date, wk.week_number);
-    return today >= start && today <= addDays(start, 6);
-  });
-  const initialWeek = currentWk ? currentWk.week_number : (weeks[0]?.week_number ?? null);
-  if (initialWeek !== null) openWeekNumbers.add(initialWeek);
-  mobileWeekIndex = currentWk ? weeks.indexOf(currentWk) : 0;
+  let currentWkIndex = 0;
+  for (let i = 0; i < weeks.length; i++) {
+    const wk = weeks[i];
+    const wStart = weekStartDate(plan.race_date, wk.week_number);
+    const wEnd   = addDays(wStart, 6);
+    if (wEnd >= today) {
+      openWeekNumbers.add(wk.week_number); // current or future: open
+    }
+    if (today >= wStart && today <= wEnd) currentWkIndex = i;
+  }
+  // If no current week found (e.g. before plan start), open all
+  if (openWeekNumbers.size === 0) weeks.forEach(w => openWeekNumbers.add(w.week_number));
+  mobileWeekIndex = currentWkIndex;
 
   renderDesktop();
   renderMobile();
