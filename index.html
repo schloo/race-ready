@@ -378,15 +378,15 @@ body {
 .week-inner {
   display: grid;
   grid-template-columns: 1fr 164px;
-  margin: 10px 12px 12px;
-  border: 0.5px solid var(--cool-border);
-  border-radius: 8px;
-  overflow: hidden;
+  align-items: start;
 }
 
 .grid-pane {
+  margin: 10px 8px 12px 12px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  overflow: hidden;
   overflow-x: auto;
-  border-right: 0.5px solid var(--cool-border);
 }
 
 /* ── Calendar grid table ── */
@@ -1710,7 +1710,7 @@ function buildCollapsedRow(wk, dailyMap) {
     <i class="ti ti-chevron-right wr-chev"></i>
     <span class="wr-num">Week T-${wk.week_number}</span>
     <span class="wr-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
-    <span class="wr-phase">${locAbbrev} <span style="color:var(--text-tertiary);font-weight:400">·</span> ${wk.phase}</span>
+    <span class="wr-phase">${wk.phase} <span style="color:var(--text-tertiary);font-weight:400">·</span> ${locAbbrev}</span>
     <span class="wr-mi">${miStr}</span>
     <span class="acr-pill ${acrCls}">${acrStr}</span>
   `;
@@ -1756,13 +1756,13 @@ function buildOpenWeekBlock(wk, dailyMap) {
     <span class="wbh-num">Week T-${wk.week_number}</span>
     <span class="wbh-sep">·</span>
     <span class="wbh-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
+    <select class="loc-select phase-select" data-week-id="${wk.id}" title="${escHtml(PHASE_DESCS[wk.phase]||'')}">
+      ${PHASES.map(p => `<option value="${p}" ${wk.phase===p?'selected':''}>${p}</option>`).join('')}
+    </select>
     <select class="loc-select" data-week-id="${wk.id}" title="Training location">
       <option value="New York"       ${wk.location==='New York'?'selected':''}>📍 NYC</option>
       <option value="San Francisco"  ${wk.location==='San Francisco'?'selected':''}>📍 SF</option>
       <option value="Travel"         ${wk.location==='Travel'?'selected':''}>✈ Travel</option>
-    </select>
-    <select class="loc-select phase-select" data-week-id="${wk.id}" title="${escHtml(PHASE_DESCS[wk.phase]||'')}">
-      ${PHASES.map(p => `<option value="${p}" ${wk.phase===p?'selected':''}>${p}</option>`).join('')}
     </select>
     <span class="wbh-acr"><span class="acr-pill ${peakCls}">${peakStr}</span></span>
   `;
@@ -2566,6 +2566,177 @@ async function saveDayData(day) {
 // ────────────────────────────────────────────────
 // Bootstrap from Supabase
 // ────────────────────────────────────────────────
+// One-time data migration from UL.xlsx
+// ────────────────────────────────────────────────
+
+const MIGRATION_DATA = {
+  26:{ phase:'Foundation',    loc:'New York',    target:16,
+       q1:'No Q sessions this week; Easy runs all week + add 6-8 ST on 2 days', q2:'',
+       q1d:null, q2d:null,
+       days:[[3.6,0,0,0,0],[0,0,0,0,0],[3,0,0,0,0],[0,0,0,0,0],[4.3,0,0,0,0],[0,0,0,0,0],[6.8,0,0,0,0]] },
+  25:{ phase:'Foundation',    loc:'New York',    target:19,
+       q1:'2 Easy / 2×1 Threshold w/1 min rests / 3×3 min Intervals w/2 min jg / 4×200 Reps w/200 jg / 1 Easy',
+       q2:'L = lesser of 12 miles (19 km) & 90 min', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[2.6,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[4,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]] },
+  24:{ phase:'Foundation',    loc:'New York',    target:21,
+       q1:'2 Easy / 3×1 Threshold w/1 min rests / 8×200 Reps w/200 jg / 1 Easy',
+       q2:'30 min Easy / 6 Marathon', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[4.2,0,0,0,0],[5,0,0,0,0],[0,0,0,0,0],[3.5,0,0,0,0],[7.2,0,0,0,0],[0,0,0,0,0]] },
+  23:{ phase:'Foundation',    loc:'New York',    target:19,
+       q1:'No Q sessions this week; Easy runs all week + add 6-8 ST on 2 days', q2:'',
+       q1d:null, q2d:null,
+       days:[[0,0,0,0,0],[1,0,0,0,0],[5,0,0,0,0],[5,0,0,0,0],[0,0,0,0,0],[8,0,0,0,0],[2,0,0,0,0]] },
+  22:{ phase:'Foundation',    loc:'New York',    target:21,
+       q1:'2 Easy / 3×1 Threshold w/1 min rests / 8×200 Reps w/200 jg / 1 Easy',
+       q2:'2 Easy / 4×1 Threshold w/1 min rests / 2 Easy', q1d:1, q2d:3,
+       days:[[0,0,0,0,0],[4,0,3,0,1],[0,0,0,0,0],[3.5,0,3,0,0],[0,0,0,0,0],[0,0,3,0,0],[4.5,0,0,0,0]] },
+  21:{ phase:'Foundation',    loc:'New York',    target:24,
+       q1:'2 Easy / 2×1 Threshold w/2 min rests / 3×1 km Intervals w/3 min jg / 6×200 Reps w/200 jg / 1 Easy',
+       q2:'L = lesser of 13 miles (21 km) & 90 min', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[3,0,2,1,1],[3,0,0,0,0],[4,0,0,0,0],[0,0,0,0,0],[9.5,0,0,0,0],[0,0,0,0,0]] },
+  20:{ phase:'Initial Quality', loc:'New York',  target:27,
+       q1:'1 Easy / 5 Marathon / 1 Easy / 4 Marathon / 1 Easy',
+       q2:'30 min Easy / 8 Marathon', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[3,5,0,0,0],[3,0,0,0,0],[3,0,0,0,0],[0,0,0,0,0],[3,7.5,0,0,0],[0,0,0,0,0]] },
+  19:{ phase:'Initial Quality', loc:'New York',  target:30,
+       q1:'No Q sessions this week; Easy runs all week + add 6-8 ST on 2 days', q2:'',
+       q1d:null, q2d:null,
+       days:[[0,0,0,0,0],[6,0,0,0,0],[4,2,0,0,0],[5,0,0,0,0],[0,0,0,0,0],[4,3,0,0,0],[4,0,0,0,0]] },
+  18:{ phase:'Initial Quality', loc:'New York',  target:33,
+       q1:'2 Easy / 3×1 Threshold w/1 min rests / 8×200 Reps w/200 jg / 2 Easy',
+       q2:'2 Easy / 4×1 Threshold w/1 min rests / 2 Easy', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[4,0,3,1,0],[6,0,0,0,0],[5,0,0,0,0],[0,0,0,0,0],[6,0,2,0,0],[3,0,0,0,0]] },
+  17:{ phase:'Initial Quality', loc:'New York',  target:27,
+       q1:'2 Easy / 2 Threshold / 2 min rest / 8×200 Reps w/200 jg / 3×3 min Intervals w/3 min jg / 1 Easy',
+       q2:'L = lesser of 14 miles (23 km) & 2 hr', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[5,0,2,1,1],[0,0,0,0,0],[4,0,0,0,0],[0,0,0,0,0],[11,0,0,0,0],[0,0,0,0,0]] },
+  16:{ phase:'Initial Quality', loc:'New York',  target:30,
+       q1:'2 Easy / 6 Marathon / 1 Easy / 4 Marathon / 1 Easy',
+       q2:'3 Easy / 10 Marathon', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[3,7,0,0,0],[3,0,0,0,0],[5,0,0,0,0],[0,0,0,0,0],[3,9,0,0,0],[0,0,0,0,0]] },
+  15:{ phase:'Initial Quality', loc:'New York',  target:27,
+       q1:'No Q sessions this week; Easy runs all week + add 6-8 ST on 2 days', q2:'',
+       q1d:null, q2d:null,
+       days:[[0,0,0,0,0],[5,0,0,0,0],[6,0,0,0,0],[5,0,0,0,0],[0,0,0,0,0],[6,0,0,0,0],[5,0,0,0,0]] },
+  14:{ phase:'Transition Quality', loc:'New York', target:33,
+       q1:'2 Easy / 4×1 Threshold w/1 min rests / 8×200 Reps w/200 jg / 2 Easy / 2 Threshold / 2 min rest / 1 Threshold / 1 Easy',
+       q2:'2 Easy / 2×1 Threshold w/1 min rests', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[5,0,7,0,1],[4,0,0,0,0],[7,0,0,0,0],[0,0,0,0,0],[4,0,4,0,0],[0,0,0,0,0]] },
+  13:{ phase:'Transition Quality', loc:'New York', target:30,
+       q1:'2 Easy / 2 Threshold / 2 min rest / 3×3 min Intervals w/2 min jg / 8×200 Reps w/200 jg / 1 Easy',
+       q2:'L = lesser of 15 miles (24 km) & 2 hr', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[3,0,2,2,1],[4,0,0,0,0],[5,0,0,0,0],[0,0,0,0,0],[13,0,0,0,0],[0,0,0,0,0]] },
+  12:{ phase:'Transition Quality', loc:'New York', target:32,
+       q1:'2 Easy / 6 Marathon / 1 Easy / 5 Marathon / 1 Easy',
+       q2:'20 min Easy / 12 Marathon', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[4,10,0,0,0],[0,0,0,0,0],[4,0,0,0,0],[0,0,0,0,0],[2,12,0,0,0],[0,0,0,0,0]] },
+  11:{ phase:'Transition Quality', loc:'New York', target:28,
+       q1:'No Q sessions this week; Easy runs all week + add 6-8 ST on 2 days', q2:'',
+       q1d:null, q2d:null,
+       days:[[0,0,0,0,0],[7,0,0,0,0],[5,0,0,0,0],[5,0,0,0,0],[0,0,0,0,0],[7,0,0,0,0],[4,0,0,0,0]] },
+  10:{ phase:'Transition Quality', loc:'New York', target:40,
+       q1:'2 Easy / 4×1 Threshold w/1 min rests / 8×200 Reps w/200 jg / 2 Easy / 2 min rest / 1 Threshold / 1 Easy',
+       q2:'2 Easy / 2×1 Threshold w/1 min rests / 2 Threshold', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[3,0,5,0,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[2,0,4,0,0],[0,0,0,0,0]] },
+   9:{ phase:'Transition Quality', loc:'Travel',   target:36,
+       q1:'2 Easy / 2 Threshold / 2 min rest / 2 Threshold / 2 min rest / 3×3 min Intervals w/2 min jg / 6×200 Reps w/200 jg / 1 Easy',
+       q2:'L = lesser of 15 miles (24 km) & 130 min', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[3,0,4,2,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[15,0,0,0,0],[0,0,0,0,0]] },
+   8:{ phase:'Transition Quality', loc:'New York', target:40,
+       q1:'3 Easy / 6 Marathon / 1 Easy / 4 Marathon / 1 Easy',
+       q2:'30 min Easy / 12 Marathon', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[5,10,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[3,12,0,0,0],[0,0,0,0,0]] },
+   7:{ phase:'Transition Quality', loc:'New York', target:32,
+       q1:'No Q sessions this week; Easy runs all week + add 6-8 ST on 2 days', q2:'',
+       q1d:null, q2d:null,
+       days:[[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]] },
+   6:{ phase:'Final Quality',    loc:'New York',   target:40,
+       q1:'2 Easy / 4×1 Threshold w/1 min rests / 8×200 Reps w/200 jg / 2 Easy',
+       q2:'30 min Easy / 3×2 Threshold w/2 min rests / 2 Easy', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[4,0,4,0,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[5,0,6,0,0],[0,0,0,0,0]] },
+   5:{ phase:'Final Quality',    loc:'New York',   target:36,
+       q1:'2 Easy / 2×1 Threshold w/1 min rests / 3×3 min Intervals w/2 min jg / 8×200 Reps w/200 jg / 1 Easy',
+       q2:'L = lesser of 15 miles (24 km) & 130 min', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[3,0,2,1,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[15,0,0,0,0],[0,0,0,0,0]] },
+   4:{ phase:'Final Quality',    loc:'New York',   target:36,
+       q1:'3 Easy / 5 Marathon / 1 Easy / 5 Marathon / 1 Easy',
+       q2:'20 min Easy / 12 Marathon', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[5,10,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[2,12,0,0,0],[0,0,0,0,0]] },
+   3:{ phase:'Taper',            loc:'New York',   target:32,
+       q1:'No Q sessions this week; Easy runs all week + add 6-8 ST on 2 days', q2:'',
+       q1d:null, q2d:null,
+       days:[[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]] },
+   2:{ phase:'Taper',            loc:'New York',   target:28,
+       q1:'2 Easy / 4×1 Threshold w/1 min rests / 8×200 Reps w/200 jg / 2 Easy',
+       q2:'60 min Easy / 3 Threshold / 2 min rest / 2 Threshold / 2 Easy', q1d:1, q2d:5,
+       days:[[0,0,0,0,0],[4,0,4,0,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[8,0,5,0,0],[0,0,0,0,0]] },
+   1:{ phase:'Taper',            loc:'New York',   target:20,
+       q1:'7 days: 90 min Easy / 6 days: 60 min Easy / 5 days: 3×1 Threshold w/2 min rests / 4 days: 60 min Easy / 2 days: 30 min Easy / 1 day: 30 min Easy (tomorrow is the marathon race)',
+       q2:'', q1d:1, q2d:null,
+       days:[[3,0,0,0,0],[0,0,3,0,0],[0,0,0,0,0],[0,0,0,0,0],[2,0,0,0,0],[0,0,0,0,0],[0,26.2,0,0,0]] },
+};
+
+async function runMigration() {
+  console.log('Running plan migration from UL.xlsx...');
+
+  // Update plan paces to match spreadsheet
+  plan.vdot_paces = { E:'11:15', M:'10:00', T:'9:00', I:'8:15', R:'7:15' };
+  await savePlanMeta();
+  updatePaceChips();
+
+  // Load all weeks to get their IDs
+  const wkList = await loadWeeks(plan.id);
+  const wkMap = {};
+  for (const wk of wkList) wkMap[wk.week_number] = wk;
+
+  for (const [numStr, data] of Object.entries(MIGRATION_DATA)) {
+    const num = parseInt(numStr);
+    const wk = wkMap[num];
+    if (!wk) { console.warn(`Week ${num} not found`); continue; }
+
+    // Update week metadata
+    wk.phase            = data.phase;
+    wk.location         = data.loc;
+    wk.target_miles     = data.target;
+    wk.q1_prescription  = data.q1;
+    wk.q2_prescription  = data.q2;
+    await saveWeekMeta(wk);
+
+    // Build day records with Q tag assignment
+    const dayRecords = data.days.map((paces, d) => ({
+      week_id:          wk.id,
+      day_of_week:      d,
+      easy_miles:       paces[0],
+      marathon_miles:   paces[1],
+      threshold_miles:  paces[2],
+      interval_miles:   paces[3],
+      repetition_miles: paces[4],
+      tags: (d === data.q1d ? ['Q1'] : d === data.q2d ? ['Q2'] : []),
+    }));
+
+    // Delete existing days for this week, then insert fresh
+    await sbFetch(`/days?week_id=eq.${wk.id}`, {
+      method: 'DELETE',
+      prefer: 'return=minimal',
+    });
+    await sbFetch(`/days`, {
+      method: 'POST',
+      body: JSON.stringify(dayRecords),
+      prefer: 'return=minimal',
+    });
+
+    // Update in-memory state
+    weeks[weeks.findIndex(w => w.id === wk.id)] = wk;
+    days[wk.id] = dayRecords.map(d => ({...d, id: days[wk.id]?.find(x=>x.day_of_week===d.day_of_week)?.id || null}));
+  }
+
+  localStorage.setItem('migV1', '1');
+  console.log('Migration complete.');
+  renderDesktop();
+  renderMobile();
+}
+
+// ────────────────────────────────────────────────
 
 async function initFromSupabase() {
   plan = await loadPlan();
@@ -2618,6 +2789,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('loading-screen').innerHTML =
       `<span style="color:#A32D2D">⚠ Could not connect to database. Check console for details.</span>`;
     return;
+  }
+
+  if (!localStorage.getItem('migV1')) {
+    const ls = document.getElementById('loading-screen');
+    ls.style.display = 'flex';
+    ls.innerHTML = '<div class="spinner"></div> Populating plan from spreadsheet…';
+    try {
+      await runMigration();
+      await initFromSupabase();
+    } catch (migErr) {
+      console.error('Migration error:', migErr);
+      localStorage.setItem('migV1', '1'); // don't retry on hard failure
+    }
+    ls.style.display = 'none';
   }
 
   document.getElementById('loading-screen').style.display = 'none';
