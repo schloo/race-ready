@@ -260,17 +260,16 @@ body {
 
 .loc-select {
   font-size: 11px;
-  padding: 0 14px 0 0;
-  border: none;
-  border-bottom: 0.5px dashed var(--cool-border);
-  color: var(--text-tertiary);
-  background: transparent;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  padding: 2px 18px 2px 6px;
+  border: 0.5px solid var(--cool-border);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4'%3E%3Cpath d='M0 0l3.5 4L7 0z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 6px center;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4'%3E%3Cpath d='M0 0l3.5 4L7 0z' fill='%23bbb'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 1px center;
   outline: none;
 }
 
@@ -822,6 +821,24 @@ body {
 
 /* API key popover */
 .apikey-note { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+/* ── Callout box ── */
+.callout-box {
+  background: var(--cool-bg);
+  border: 0.5px solid var(--cool-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+.callout-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-right: 6px;
+}
 
 /* ── Loading / empty states ── */
 #loading-screen {
@@ -1627,7 +1644,7 @@ function updateSubtitle() {
   const msPerDay = 86400000;
   const daysOut = Math.round((raceDate - today) / msPerDay);
   const weeksOut = Math.round(daysOut / 7);
-  const raceStr = fmtDate(raceDate, {month:'short', day:'numeric'});
+  const raceStr = fmtDate(raceDate, {month:'short', day:'numeric', year:'numeric'});
   const sub = weeksOut > 0 ? `${raceStr} · ${weeksOut} weeks out`
             : weeksOut === 0 ? `${raceStr} · Race week!`
             : `${raceStr} · ${Math.abs(weeksOut)} weeks ago`;
@@ -1641,6 +1658,17 @@ function updateSubtitle() {
 function renderDesktop() {
   const container = document.getElementById('main');
   container.innerHTML = '';
+
+  // Callout banner
+  const callout = document.createElement('div');
+  callout.className = 'callout-box';
+  callout.innerHTML = `
+    <span class="callout-title">Daniels 2Q Method</span>
+    Plan each week around two quality workouts (Q1 + Q2) with easy mileage filling the rest.
+    Weekly metrics track volume vs. target, week-over-week ramp, and
+    ACR (acute:chronic workload ratio) per day to flag injury risk.
+  `;
+  container.appendChild(callout);
 
   const dailyMap = buildDailyTotalsMap();
 
@@ -1677,11 +1705,12 @@ function buildCollapsedRow(wk, dailyMap) {
   const acrStr = peakACR !== null ? `ACR ${Math.round(peakACR)}%` : 'ACR —';
   const acrCls = peakACR !== null ? acrClass(peakACR) : 'dim';
 
+  const locAbbrev = {'New York':'NYC','San Francisco':'SF','Travel':'✈ Travel'}[wk.location] || wk.location;
   row.innerHTML = `
     <i class="ti ti-chevron-right wr-chev"></i>
     <span class="wr-num">Week T-${wk.week_number}</span>
     <span class="wr-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
-    <span class="wr-phase">${wk.phase}</span>
+    <span class="wr-phase">${locAbbrev}</span>
     <span class="wr-mi">${miStr}</span>
     <span class="acr-pill ${acrCls}">${acrStr}</span>
   `;
@@ -1727,10 +1756,10 @@ function buildOpenWeekBlock(wk, dailyMap) {
     <span class="wbh-num">Week T-${wk.week_number}</span>
     <span class="wbh-sep">·</span>
     <span class="wbh-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
-    <select class="loc-select" data-week-id="${wk.id}">
-      <option ${wk.location==='New York'?'selected':''}>New York</option>
-      <option ${wk.location==='San Francisco'?'selected':''}>San Francisco</option>
-      <option ${wk.location==='Travel'?'selected':''}>Travel</option>
+    <select class="loc-select" data-week-id="${wk.id}" title="Training location">
+      <option value="New York"       ${wk.location==='New York'?'selected':''}>📍 NYC</option>
+      <option value="San Francisco"  ${wk.location==='San Francisco'?'selected':''}>📍 SF</option>
+      <option value="Travel"         ${wk.location==='Travel'?'selected':''}>✈ Travel</option>
     </select>
     <span class="wbh-acr"><span class="acr-pill ${peakCls}">${peakStr}</span></span>
   `;
