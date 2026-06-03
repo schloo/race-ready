@@ -281,18 +281,26 @@ body {
 .q-column > * + * { border-top: 0.5px solid var(--cool-border); }
 
 /* Target cell */
+/* Weekly target — single row: label left, number right */
 .q-target-cell {
-  padding: 10px 14px;
+  padding: 8px 12px;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 5px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
   background: #fff;
 }
-.q-target-hdr { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-.q-target-row { display: flex; align-items: baseline; gap: 4px; }
+.q-target-hdr {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.q-target-row { display: flex; align-items: baseline; gap: 3px; margin-left: auto; }
 .q-target-input {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   font-family: var(--font-sans);
   color: var(--text-primary);
@@ -300,7 +308,8 @@ body {
   border-bottom: 1.5px dashed var(--cool-border);
   background: transparent;
   padding: 0;
-  width: 52px;
+  width: 36px;
+  text-align: right;
   line-height: 1.1;
   -moz-appearance: textfield;
   transition: border-color 0.15s;
@@ -309,7 +318,7 @@ body {
 .q-target-input:focus { outline: none; border-bottom-color: var(--text-secondary); }
 .q-target-input::-webkit-outer-spin-button,
 .q-target-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.q-target-unit { font-size: 11px; color: var(--text-tertiary); }
+.q-target-unit { font-size: 10px; color: var(--text-tertiary); }
 
 /* Editability hint on prescription cells */
 .editable-cell { position: relative; }
@@ -367,7 +376,7 @@ body {
   background: transparent;
   font-size: 11px;
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: 1.4;
   font-family: var(--font-sans);
   resize: none;
   outline: none;
