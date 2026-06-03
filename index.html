@@ -42,11 +42,11 @@ input[type="number"] { -moz-appearance: textfield; }
   --q-bg: #daeafc; --q-text: #1a5aaa; --q-border: #80b4e8;
 
   /* ACR zone colors */
-  --acr-purple-bg: #EEEDFE; --acr-purple-text: #3C3489;
-  --acr-blue-bg:   #E6F1FB; --acr-blue-text:   #185FA5;
-  --acr-green-bg:  #EAF3DE; --acr-green-text:  #3B6D11;
-  --acr-orange-bg: #FAEEDA; --acr-orange-text: #854F0B;
-  --acr-red-bg:    #FCEBEB; --acr-red-text:    #A32D2D;
+  --acr-purple-bg: #e8d0f0; --acr-purple-text: #3a1048;
+  --acr-blue-bg:   #daeafc; --acr-blue-text:   #1a5aaa;
+  --acr-green-bg:  #fff8cc; --acr-green-text:  #5c4400;
+  --acr-orange-bg: #ffd4c2; --acr-orange-text: #5c1800;
+  --acr-red-bg:    #fcc8c8; --acr-red-text:    #5c0000;
 }
 
 /* ── Base ── */
@@ -82,9 +82,10 @@ body {
 
 .title-stack {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .plan-title {
@@ -92,6 +93,8 @@ body {
   font-weight: 500;
   color: var(--text-primary);
 }
+
+.title-sep { color: var(--cool-border); font-size: 13px; }
 
 .plan-subtitle {
   display: flex;
@@ -105,7 +108,7 @@ body {
   color: var(--text-tertiary);
   opacity: 0.5;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
 }
 .plan-subtitle .edit-icon:hover { opacity: 1; }
 
@@ -283,28 +286,30 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: 5px;
   background: #fff;
 }
-.q-target-lbl { font-size: 10px; color: var(--text-tertiary); }
+.q-target-hdr { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+.q-target-row { display: flex; align-items: baseline; gap: 4px; }
 .q-target-input {
   font-size: 18px;
   font-weight: 500;
   font-family: var(--font-sans);
   color: var(--text-primary);
   border: none;
-  border-bottom: 1.5px dashed transparent;
+  border-bottom: 1.5px dashed var(--cool-border);
   background: transparent;
   padding: 0;
-  width: 100%;
+  width: 52px;
   line-height: 1.1;
   -moz-appearance: textfield;
   transition: border-color 0.15s;
 }
-.q-target-input:hover { border-bottom-color: var(--cool-border); }
-.q-target-input:focus { outline: none; border-bottom-color: #aaa; }
+.q-target-input:hover { border-bottom-color: #aaa; }
+.q-target-input:focus { outline: none; border-bottom-color: var(--text-secondary); }
 .q-target-input::-webkit-outer-spin-button,
 .q-target-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.q-target-unit { font-size: 11px; color: var(--text-tertiary); }
 
 /* Editability hint on prescription cells */
 .editable-cell { position: relative; }
@@ -520,6 +525,36 @@ body {
 /* ACR row */
 .acr-row td.rl { background: #fff !important; font-size: 11px; color: var(--text-secondary); }
 .acr-cell { font-size: 11px; font-weight: 500; background: #fff !important; }
+
+/* ACR info tooltip */
+.acr-info {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  cursor: help;
+  position: relative;
+  vertical-align: super;
+  margin-left: 2px;
+}
+.acr-info::after {
+  content: attr(title);
+  position: fixed;
+  left: 80px;
+  top: auto;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 400;
+  padding: 7px 10px;
+  border-radius: 6px;
+  width: 240px;
+  white-space: normal;
+  line-height: 1.5;
+  z-index: 300;
+  display: none;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.acr-info:hover::after { display: block; }
 .acr-cell.purple { color: var(--acr-purple-text); }
 .acr-cell.blue   { color: var(--acr-blue-text); }
 .acr-cell.green  { color: var(--acr-green-text); }
@@ -1176,6 +1211,7 @@ body {
   <div class="topbar-left">
     <div class="title-stack">
       <span class="plan-title" id="plan-title-display">Marathon Plan</span>
+      <span class="title-sep">·</span>
       <div class="plan-subtitle">
         <span id="plan-subtitle-text">—</span>
         <i class="ti ti-pencil edit-icon" id="open-plan-settings" title="Edit plan settings"></i>
@@ -1350,20 +1386,20 @@ body {
 
 <!-- Pace editor -->
 <div class="popover-backdrop" id="pace-editor-backdrop">
-  <div class="popover" id="pace-editor-popover" style="top:52px;left:200px;">
+  <div class="popover" id="pace-editor-popover" style="top:52px;left:200px;width:480px;">
     <div class="popover-header">
       <span class="popover-title"><i class="ti ti-chart-line" style="font-size:13px"></i> Training paces</span>
       <button class="popover-close" data-close="pace-editor"><i class="ti ti-x"></i></button>
     </div>
     <div class="popover-body">
       <table class="pace-editor-table">
-        <thead><tr><th></th><th>Pace</th><th>Feel</th><th class="right">min/mi</th></tr></thead>
+        <thead><tr><th></th><th>Pace</th><th>Feel</th><th class="right">Current</th><th class="right">Goal</th></tr></thead>
         <tbody>
-          <tr><td><span class="pace-chip-sm E">E</span></td><td style="font-size:12px;color:var(--text-secondary)">Easy</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Speak full sentences, feels almost too slow</td><td style="text-align:right"><input class="pace-pace-input" data-pace="E" id="pe-E" value="10:00"></td></tr>
-          <tr><td><span class="pace-chip-sm M">M</span></td><td style="font-size:12px;color:var(--text-secondary)">Marathon</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Controlled, aware you're working</td><td style="text-align:right"><input class="pace-pace-input" data-pace="M" id="pe-M" value="9:00"></td></tr>
-          <tr><td><span class="pace-chip-sm T">T</span></td><td style="font-size:12px;color:var(--text-secondary)">Threshold</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Comfortably hard, few words only</td><td style="text-align:right"><input class="pace-pace-input" data-pace="T" id="pe-T" value="8:30"></td></tr>
-          <tr><td><span class="pace-chip-sm I">I</span></td><td style="font-size:12px;color:var(--text-secondary)">Interval</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Heavy breathing, 5K effort, sustain 3–5 min</td><td style="text-align:right"><input class="pace-pace-input" data-pace="I" id="pe-I" value="8:00"></td></tr>
-          <tr><td><span class="pace-chip-sm R">R</span></td><td style="font-size:12px;color:var(--text-secondary)">Repetition</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Fast and sharp, 400m race effort, full recovery</td><td style="text-align:right"><input class="pace-pace-input" data-pace="R" id="pe-R" value="7:30"></td></tr>
+          <tr><td><span class="pace-chip-sm E">E</span></td><td style="font-size:12px;color:var(--text-secondary)">Easy</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Speak full sentences, feels almost too slow</td><td style="text-align:right"><input class="pace-pace-input" style="border-color:var(--e-border)" data-pace="E" id="pe-E" value="10:00"></td><td style="text-align:right"><input class="pace-pace-input pace-goal-input" style="border-color:var(--e-border)" data-pace="E_goal" id="pe-E-goal" placeholder="—"></td></tr>
+          <tr><td><span class="pace-chip-sm M">M</span></td><td style="font-size:12px;color:var(--text-secondary)">Marathon</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Controlled, aware you're working</td><td style="text-align:right"><input class="pace-pace-input" style="border-color:var(--m-border)" data-pace="M" id="pe-M" value="9:00"></td><td style="text-align:right"><input class="pace-pace-input pace-goal-input" style="border-color:var(--m-border)" data-pace="M_goal" id="pe-M-goal" placeholder="—"></td></tr>
+          <tr><td><span class="pace-chip-sm T">T</span></td><td style="font-size:12px;color:var(--text-secondary)">Threshold</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Comfortably hard, few words only</td><td style="text-align:right"><input class="pace-pace-input" style="border-color:var(--t-border)" data-pace="T" id="pe-T" value="8:30"></td><td style="text-align:right"><input class="pace-pace-input pace-goal-input" style="border-color:var(--t-border)" data-pace="T_goal" id="pe-T-goal" placeholder="—"></td></tr>
+          <tr><td><span class="pace-chip-sm I">I</span></td><td style="font-size:12px;color:var(--text-secondary)">Interval</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Heavy breathing, 5K effort, sustain 3–5 min</td><td style="text-align:right"><input class="pace-pace-input" style="border-color:var(--i-border)" data-pace="I" id="pe-I" value="8:00"></td><td style="text-align:right"><input class="pace-pace-input pace-goal-input" style="border-color:var(--i-border)" data-pace="I_goal" id="pe-I-goal" placeholder="—"></td></tr>
+          <tr><td><span class="pace-chip-sm R">R</span></td><td style="font-size:12px;color:var(--text-secondary)">Repetition</td><td style="font-size:11px;color:var(--text-tertiary);line-height:1.4">Fast and sharp, 400m race effort, full recovery</td><td style="text-align:right"><input class="pace-pace-input" style="border-color:var(--r-border)" data-pace="R" id="pe-R" value="7:30"></td><td style="text-align:right"><input class="pace-pace-input pace-goal-input" style="border-color:var(--r-border)" data-pace="R_goal" id="pe-R-goal" placeholder="—"></td></tr>
         </tbody>
       </table>
       <div class="pop-action-row">
@@ -1551,7 +1587,7 @@ const DAY_NAMES  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const PACE_KEYS  = ['easy','marathon','threshold','interval','repetition'];
 const PACE_LABELS= ['Easy','Marathon','Threshold','Interval','Repetition'];
 const PACE_CODES = ['E','M','T','I','R'];
-const PACE_COLORS= ['#e8d060','#d4a050','#d47060','#cc4848','#a070c0'];
+const PACE_COLORS= ['#fff8cc','#ffe3b0','#ffd4c2','#fcc8c8','#e8d0f0'];
 
 const PHASE_DESCS = {
   'Foundation':        'Build aerobic base. Easy mileage, strides, light strength work.',
@@ -1651,6 +1687,9 @@ function updatePaceChips() {
     if (pe) pe.value = val;
     const mpe = document.getElementById(`m-pe-${code}`);
     if (mpe) mpe.value = val;
+    // Goal pace inputs
+    const gpe = document.getElementById(`pe-${code}-goal`);
+    if (gpe) gpe.value = paces[`${code}_goal`] || '';
   }
 }
 
@@ -1834,9 +1873,12 @@ function buildOpenWeekBlock(wk, dailyMap) {
 
   qRow.innerHTML = `
     <div class="q-target-cell">
-      <input class="q-target-input" type="number" min="0" step="1"
-        data-week-id="${wk.id}" value="${wk.target_miles > 0 ? wk.target_miles : ''}" placeholder="—">
-      <div class="q-target-lbl">mi weekly target</div>
+      <div class="q-target-hdr">Weekly Target</div>
+      <div class="q-target-row">
+        <input class="q-target-input" type="number" min="0" step="1"
+          data-week-id="${wk.id}" value="${wk.target_miles > 0 ? wk.target_miles : ''}" placeholder="—">
+        <span class="q-target-unit">miles</span>
+      </div>
     </div>
     <div class="q-cell editable-cell">
       <div class="q-label-row">
@@ -1991,20 +2033,19 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   // ACR row
   const acrRow = document.createElement('tr');
   acrRow.className = 'acr-row';
-  acrRow.innerHTML = `<td class="rl">ACR</td>`;
+  const acrTd = document.createElement('td');
+  acrTd.className = 'rl';
+  acrTd.innerHTML = `ACR <span class="acr-info" title="Acute:Chronic Workload Ratio. Acute = sum of daily miles over the last 7 days. Chronic = average weekly miles over the last 28 days. ACR = Acute ÷ Chronic × 100%. Ideal range: 80–130%. Below 80% = underloading. Above 130% = elevated injury risk.">ⓘ</span>`;
+  acrRow.appendChild(acrTd);
+
   for (let d = 0; d < 7; d++) {
-    const dayData = wDays.find(x => x.day_of_week === d);
     const td = document.createElement('td');
-    if (dayData && dayTotal(dayData) > 0) {
-      const dateStr = isoDate(addDays(wStart, d));
-      const acr = computeACR(dateStr, dailyMap);
-      if (acr !== null) {
-        const cls = acrClass(acr);
-        td.className = `acr-cell ${cls}`;
-        td.textContent = `${Math.round(acr)}%`;
-      } else {
-        td.textContent = '—'; td.style.color = '#ccc';
-      }
+    const dateStr = isoDate(addDays(wStart, d));
+    const acr = computeACR(dateStr, dailyMap);
+    if (acr !== null) {
+      const cls = acrClass(acr);
+      td.className = `acr-cell ${cls}`;
+      td.textContent = `${Math.round(acr)}%`;
     } else {
       td.textContent = '—'; td.style.color = '#ccc';
     }
@@ -2954,6 +2995,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('pe-save').addEventListener('click', async () => {
     for (const code of PACE_CODES) {
       plan.vdot_paces[code] = document.getElementById(`pe-${code}`).value;
+      const goal = document.getElementById(`pe-${code}-goal`)?.value?.trim();
+      if (goal) plan.vdot_paces[`${code}_goal`] = goal;
+      else delete plan.vdot_paces[`${code}_goal`];
     }
     await savePlanMeta();
     updatePaceChips();
