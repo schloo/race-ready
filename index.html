@@ -276,62 +276,44 @@ body {
 /* Goal row (3 equal columns) */
 .q-row {
   display: grid;
-  grid-template-columns: 1.4fr 88px 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   border-bottom: 0.5px solid var(--cool-border);
 }
 
-/* Phase cell (col 1) */
-.q-phase-cell {
-  padding: 8px 12px;
-  border-right: 0.5px solid var(--cool-border);
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  background: #fff;
-}
-.q-phase-select {
-  font-size: 12px;
-  font-weight: 500;
-  font-family: var(--font-sans);
-  border: none;
-  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 2px center;
-  color: var(--text-primary);
-  padding: 0 14px 0 0;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-}
-.q-phase-select:focus { outline: none; }
-.q-phase-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
-
-/* Target cell (col 2) */
+/* Target cell */
 .q-target-cell {
-  padding: 8px 10px;
+  padding: 10px 14px;
   border-right: 0.5px solid var(--cool-border);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
-  gap: 3px;
+  gap: 2px;
   background: #fff;
 }
 .q-target-lbl { font-size: 10px; color: var(--text-tertiary); }
 .q-target-input {
-  font-size: 18px;
+  font-size: 28px;
   font-weight: 500;
   font-family: var(--font-sans);
   color: var(--text-primary);
   border: none;
+  border-bottom: 1.5px dashed transparent;
   background: transparent;
   padding: 0;
   width: 100%;
+  line-height: 1.1;
   -moz-appearance: textfield;
+  transition: border-color 0.15s;
 }
-.q-target-input:focus { outline: none; }
+.q-target-input:hover { border-bottom-color: var(--cool-border); }
+.q-target-input:focus { outline: none; border-bottom-color: #aaa; }
 .q-target-input::-webkit-outer-spin-button,
 .q-target-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.q-target-mi { font-size: 10px; color: var(--text-tertiary); }
+
+/* Editability hint on prescription cells */
+.editable-cell { position: relative; }
+.editable-cell:hover { background: #fafbfd; }
+.editable-cell .q-prescription:focus { background: #fafbfd; }
 
 .q-cell {
   padding: 8px 12px;
@@ -1480,7 +1462,7 @@ let weeks = [];     // sorted descending by week_number (T-26 first)
 let days  = {};     // { [week_id]: Day[7] } sorted by day_of_week
 
 // Which week is expanded on desktop (week_number), null = none
-let openWeekNumber = null;
+let openWeekNumbers = new Set(); // multiple weeks can be open simultaneously
 
 // Which week is shown on mobile (index into weeks array)
 let mobileWeekIndex = 0;
@@ -1688,7 +1670,7 @@ function renderDesktop() {
   const dailyMap = buildDailyTotalsMap();
 
   for (const wk of weeks) {
-    if (wk.week_number === openWeekNumber) {
+    if (openWeekNumbers.has(wk.week_number)) {
       container.appendChild(buildOpenWeekBlock(wk, dailyMap));
     } else {
       container.appendChild(buildCollapsedRow(wk, dailyMap));
@@ -1731,11 +1713,10 @@ function buildCollapsedRow(wk, dailyMap) {
   `;
 
   row.addEventListener('click', () => {
-    openWeekNumber = wk.week_number;
+    openWeekNumbers.add(wk.week_number);
     renderDesktop();
-    // Scroll the newly opened block into view
     setTimeout(() => {
-      const el = document.querySelector('.week-block');
+      const el = document.querySelector(`.week-block[data-week-id="${wk.id}"]`);
       if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
     }, 0);
   });
@@ -1766,6 +1747,7 @@ function buildOpenWeekBlock(wk, dailyMap) {
   // Header
   const hdr = document.createElement('div');
   hdr.className = 'wbh';
+  const PHASES = ['Foundation','Initial Quality','Transition Quality','Final Quality','Taper'];
   hdr.innerHTML = `
     <i class="ti ti-chevron-down" style="font-size:11px;color:var(--text-tertiary);flex-shrink:0"></i>
     <span class="wbh-num">Week T-${wk.week_number}</span>
@@ -1776,26 +1758,35 @@ function buildOpenWeekBlock(wk, dailyMap) {
       <option value="San Francisco"  ${wk.location==='San Francisco'?'selected':''}>📍 SF</option>
       <option value="Travel"         ${wk.location==='Travel'?'selected':''}>✈ Travel</option>
     </select>
+    <select class="loc-select phase-select" data-week-id="${wk.id}" title="${escHtml(PHASE_DESCS[wk.phase]||'')}">
+      ${PHASES.map(p => `<option value="${p}" ${wk.phase===p?'selected':''}>${p}</option>`).join('')}
+    </select>
     <span class="wbh-acr"><span class="acr-pill ${peakCls}">${peakStr}</span></span>
   `;
   hdr.querySelector('.ti-chevron-down').closest('.wbh').addEventListener('click', (e) => {
     if (e.target.tagName === 'SELECT') return;
-    openWeekNumber = null;
+    openWeekNumbers.delete(wk.week_number);
     renderDesktop();
   });
-  // Location change saves inline (Supabase wired in step 5)
-  hdr.querySelector('select').addEventListener('change', (e) => {
-    e.stopPropagation();
-    wk.location = e.target.value;
-    saveWeekMeta(wk);
+  hdr.querySelectorAll('select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      e.stopPropagation();
+      if (sel.classList.contains('phase-select')) {
+        wk.phase = e.target.value;
+        sel.title = PHASE_DESCS[wk.phase] || '';
+        renderDesktop(); // update collapsed rows too
+      } else {
+        wk.location = e.target.value;
+      }
+      saveWeekMeta(wk);
+    });
   });
   block.appendChild(hdr);
 
-  // Q row — 4 columns: Phase | Target | Q1 | Q2
+  // Q row — 3 equal columns: Target | Q1 | Q2
   const qRow = document.createElement('div');
   qRow.className = 'q-row';
 
-  const PHASES = ['Foundation','Initial Quality','Transition Quality','Final Quality','Taper'];
   const dayOptions = ['—','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   const q1Day = getQDay(wk.id, 'Q1');
   const q2Day = getQDay(wk.id, 'Q2');
@@ -1812,41 +1803,24 @@ function buildOpenWeekBlock(wk, dailyMap) {
   }
 
   qRow.innerHTML = `
-    <div class="q-phase-cell">
-      <select class="q-phase-select" data-week-id="${wk.id}">
-        ${PHASES.map(p => `<option value="${p}" ${wk.phase===p?'selected':''}>${p}</option>`).join('')}
-      </select>
-      <div class="q-phase-desc" id="q-phase-desc-${wk.id}">${escHtml(PHASE_DESCS[wk.phase]||'')}</div>
-    </div>
     <div class="q-target-cell">
-      <div class="q-target-lbl">weekly target</div>
       <input class="q-target-input" type="number" min="0" step="1"
         data-week-id="${wk.id}" value="${wk.target_miles > 0 ? wk.target_miles : ''}" placeholder="—">
-      <div class="q-target-mi">mi / week</div>
+      <div class="q-target-lbl">mi weekly target</div>
     </div>
-    <div class="q-cell">
+    <div class="q-cell editable-cell">
       <div><span class="qlbl">Q1</span></div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription"
         placeholder="Q1 workout prescription…">${escHtml(wk.q1_prescription||'')}</textarea>
       <div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q1', q1Day)}</div>
     </div>
-    <div class="q-cell">
+    <div class="q-cell editable-cell">
       <div><span class="qlbl">Q2</span></div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription"
         placeholder="Q2 workout prescription…">${escHtml(wk.q2_prescription||'')}</textarea>
       <div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q2', q2Day)}</div>
     </div>
   `;
-
-  // Phase change — update description + save
-  qRow.querySelector('.q-phase-select').addEventListener('change', (e) => {
-    wk.phase = e.target.value;
-    const descEl = document.getElementById(`q-phase-desc-${wk.id}`);
-    if (descEl) descEl.textContent = PHASE_DESCS[wk.phase] || '';
-    saveWeekMeta(wk);
-    // Update collapsed row label if visible
-    renderDesktop();
-  });
 
   // Target miles — save on blur
   qRow.querySelector('.q-target-input').addEventListener('blur', (e) => {
@@ -2235,9 +2209,9 @@ function ensureDayExists(weekId, dayOfWeek) {
 }
 
 function rerenderOpenWeek() {
-  if (openWeekNumber !== null) {
-    const dailyMap = buildDailyTotalsMap();
-    const wk = weeks.find(w => w.week_number === openWeekNumber);
+  const dailyMap = buildDailyTotalsMap();
+  for (const weekNum of openWeekNumbers) {
+    const wk = weeks.find(w => w.week_number === weekNum);
     if (wk) {
       const existing = document.querySelector(`.week-block[data-week-id="${wk.id}"]`);
       if (existing) {
@@ -2648,7 +2622,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     const start = weekStartDate(plan.race_date, wk.week_number);
     return today >= start && today <= addDays(start, 6);
   });
-  openWeekNumber = currentWk ? currentWk.week_number : (weeks[0]?.week_number ?? null);
+  const initialWeek = currentWk ? currentWk.week_number : (weeks[0]?.week_number ?? null);
+  if (initialWeek !== null) openWeekNumbers.add(initialWeek);
   mobileWeekIndex = currentWk ? weeks.indexOf(currentWk) : 0;
 
   renderDesktop();
@@ -2999,14 +2974,15 @@ function syncRampDropdown() {
   const msel = document.getElementById('m-ramp-apply-from');
   sel.innerHTML  = '';
   msel.innerHTML = '';
+  const firstOpen = [...openWeekNumbers][0] ?? null;
   for (const wk of weeks) {
-    const label = `Week T-${wk.week_number}${wk.week_number === openWeekNumber ? ' (current)' : ''}`;
+    const label = `Week T-${wk.week_number}${openWeekNumbers.has(wk.week_number) ? ' (open)' : ''}`;
     sel.add(new Option(label, wk.week_number));
     msel.add(new Option(label, wk.week_number));
   }
-  if (openWeekNumber) {
-    sel.value  = openWeekNumber;
-    msel.value = openWeekNumber;
+  if (firstOpen) {
+    sel.value  = firstOpen;
+    msel.value = firstOpen;
   }
 }
 </script>
