@@ -441,8 +441,8 @@ body {
 .cal-grid td.rl {
   text-align: left;
   font-size: 11px;
-  padding: 2px 6px;
-  background: var(--cool-bg);
+  padding: 2px 10px 2px 6px;
+  background: #fff;
 }
 
 .day-head-name { font-size: 11px; font-weight: 500; }
@@ -490,10 +490,17 @@ body {
 /* Total row */
 .tot-row td {
   background: var(--cool-bg) !important;
-  font-weight: 500;
   font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
 }
-.tot-row td.tot-val { background: #fff !important; }
+.tot-row td.rl {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 400;
+  padding: 2px 10px 2px 6px;
+}
+.tot-row td.tot-val { background: #fff !important; font-weight: 500; color: var(--text-primary); }
 
 /* ACR row */
 .acr-row td.rl { background: var(--cool-bg) !important; font-size: 11px; color: var(--text-secondary); }
@@ -557,14 +564,19 @@ body {
 .st-lbl.red    { color: var(--acr-red-text); }
 .st-lbl.neutral{ color: var(--text-secondary); }
 
-.mix-wrap { margin-top: 2px; }
+.mix-wrap {
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: var(--cool-bg);
+  border: 0.5px solid var(--cool-border);
+}
 .mix-label {
   font-size: 10px;
   font-weight: 500;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 .mix-bar {
   display: flex;
@@ -573,7 +585,7 @@ body {
   overflow: hidden;
   background: var(--cool-border);
 }
-.mix-legend { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+.mix-legend { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
 .mix-legend-item { font-size: 10px; color: var(--text-secondary); }
 .mix-dot {
   width: 6px; height: 6px;
