@@ -2786,20 +2786,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  if (!localStorage.getItem('migV2')) {
-    const ls = document.getElementById('loading-screen');
-    ls.style.display = 'flex';
-    ls.innerHTML = '<div class="spinner"></div> Populating plan from spreadsheet…';
-    try {
-      await runMigration();
-      await initFromSupabase();
-    } catch (migErr) {
-      console.error('Migration error:', migErr);
-      localStorage.setItem('migV2', '1'); // don't retry on hard failure
-    }
-    ls.style.display = 'none';
-  }
-
   document.getElementById('loading-screen').style.display = 'none';
 
   updateSubtitle();
