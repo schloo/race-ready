@@ -31,12 +31,12 @@ input[type="number"] { -moz-appearance: textfield; }
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', monospace;
 
-  /* Pace colors */
-  --e-bg: #EAF3DE; --e-text: #27500A; --e-border: #C0DD97;
-  --m-bg: #E6F1FB; --m-text: #0C447C; --m-border: #B5D4F4;
-  --t-bg: #FAEEDA; --t-text: #633806; --t-border: #FAC775;
-  --i-bg: #FCEBEB; --i-text: #791F1F; --i-border: #F7C1C1;
-  --r-bg: #EEEDFE; --r-text: #26215C; --r-border: #CECBF6;
+  /* Pace colors — warm spectrum */
+  --e-bg: #fff8cc; --e-text: #5c4400; --e-border: #e8d060;
+  --m-bg: #ffe3b0; --m-text: #5c3200; --m-border: #d4a050;
+  --t-bg: #ffd4c2; --t-text: #5c1800; --t-border: #d47060;
+  --i-bg: #fcc8c8; --i-text: #5c0000; --i-border: #d04040;
+  --r-bg: #e8d0f0; --r-text: #3a1048; --r-border: #a070c0;
 
   /* Q tag */
   --q-bg: #1a1f2e; --q-text: #8aacce; --q-border: #2e3f68;
@@ -274,16 +274,12 @@ body {
 }
 
 /* Goal row (3 equal columns) */
-.q-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  border-bottom: 0.5px solid var(--cool-border);
-}
+/* Q column (left panel — target + Q1 + Q2 stacked vertically) */
+.q-column > * + * { border-top: 0.5px solid var(--cool-border); }
 
 /* Target cell */
 .q-target-cell {
   padding: 10px 14px;
-  border-right: 0.5px solid var(--cool-border);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -322,7 +318,7 @@ body {
   line-height: 1.7;
   background: #fff;
 }
-.q-cell:not(:last-child) { border-right: 0.5px solid var(--cool-border); }
+/* Q cells stack vertically inside q-column; top border handled by q-column > * + * */
 
 .qlbl {
   display: inline-block;
@@ -375,18 +371,32 @@ body {
 }
 
 /* ── Week inner: grid + summary panel ── */
-.week-inner {
-  display: grid;
-  grid-template-columns: 1fr 164px;
-  align-items: start;
-}
-
-.grid-pane {
-  margin: 10px 8px 12px 12px;
+/* Week body: Q column | grid | summary side by side */
+.week-body {
+  display: flex;
+  flex-direction: row;
+  margin: 10px 12px 12px;
   border: 0.5px solid var(--cool-border);
   border-radius: 8px;
   overflow: hidden;
+}
+
+/* Q column on the left */
+.q-column {
+  display: flex;
+  flex-direction: column;
+  width: 190px;
+  min-width: 190px;
+  flex-shrink: 0;
+  border-right: 0.5px solid var(--cool-border);
+  background: #fff;
+}
+
+.grid-pane {
+  flex: 1;
+  min-width: 0;
   overflow-x: auto;
+  border-right: 0.5px solid var(--cool-border);
 }
 
 /* ── Calendar grid table ── */
@@ -487,8 +497,11 @@ body {
 .cal-grid td:has(.pace-input:focus) { background: #fffde7 !important; }
 
 /* Total row */
+/* Separator before Total + ACR rows */
+.tot-row td { border-top: 2px solid var(--cool-border) !important; }
+
 .tot-row td {
-  background: var(--cool-bg) !important;
+  background: #fff !important;
   font-size: 12px;
   font-weight: 400;
   color: var(--text-secondary);
@@ -498,8 +511,9 @@ body {
   color: var(--text-secondary);
   font-weight: 400;
   padding: 2px 10px 2px 6px;
+  background: #fff !important;
 }
-.tot-row td.tot-val { background: #fff !important; font-weight: 500; color: var(--text-primary); }
+.tot-row td.tot-val { font-weight: 500; color: var(--text-primary); }
 
 /* ACR row */
 .acr-row td.rl { background: #fff !important; font-size: 11px; color: var(--text-secondary); }
@@ -821,6 +835,19 @@ body {
 
 /* API key popover */
 .apikey-note { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+/* ── Toggle all ── */
+.toggle-all-row { display: flex; justify-content: flex-end; padding: 2px 0; flex-shrink: 0; }
+.toggle-all-btn { font-size: 11px; color: var(--text-tertiary); cursor: pointer; user-select: none; padding: 2px 4px; }
+.toggle-all-btn:hover { color: var(--text-secondary); }
+
+/* ── WoW chips in collapsed row ── */
+.wr-wow-group { display: flex; gap: 4px; margin-left: auto; flex-shrink: 0; }
+.wr-wow { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+.wr-wow.green  { background: var(--acr-green-bg);  color: var(--acr-green-text); }
+.wr-wow.orange { background: var(--acr-orange-bg); color: var(--acr-orange-text); }
+.wr-wow.red    { background: var(--acr-red-bg);    color: var(--acr-red-text); }
+.wr-wow.neutral{ background: var(--cool-bg);        color: var(--text-tertiary); }
 
 /* ── Callout box ── */
 .callout-box {
@@ -1213,8 +1240,8 @@ body {
   <div class="m-summary">
     <div class="m-stats" id="m-stats">
       <div class="m-stat-item"><div class="m-stat-val neutral" id="m-vs-target">—</div><div class="m-stat-lbl">vs target</div></div>
-      <div class="m-stat-item"><div class="m-stat-val neutral" id="m-wow-miles">—</div><div class="m-stat-lbl">WoW miles</div></div>
-      <div class="m-stat-item"><div class="m-stat-val neutral" id="m-wow-long">—</div><div class="m-stat-lbl">WoW long run</div></div>
+      <div class="m-stat-item"><div class="m-stat-val neutral" id="m-wow-miles">—</div><div class="m-stat-lbl">Miles WoW</div></div>
+      <div class="m-stat-item"><div class="m-stat-val neutral" id="m-wow-long">—</div><div class="m-stat-lbl">Long run WoW</div></div>
     </div>
     <div class="m-mix-row" id="m-mix-row">
       <div class="m-mix-bar" id="m-mix-bar"></div>
@@ -1528,7 +1555,7 @@ const DAY_NAMES  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const PACE_KEYS  = ['easy','marathon','threshold','interval','repetition'];
 const PACE_LABELS= ['Easy','Marathon','Threshold','Interval','Repetition'];
 const PACE_CODES = ['E','M','T','I','R'];
-const PACE_COLORS= ['#97C459','#378ADD','#EF9F27','#E24B4A','#7F77DD'];
+const PACE_COLORS= ['#e8c800','#d4900a','#d06030','#d03030','#9050b0'];
 
 const PHASE_DESCS = {
   'Foundation':        'Build aerobic base. Easy mileage, strides, light strength work.',
@@ -1665,6 +1692,18 @@ function renderDesktop() {
   callout.innerHTML = `The <b>Daniels 2Q</b> marathon training methodology is meant for busy runners: It prescribes two Quality workouts per week (Q1 + Q2) with easy miles filling the remaining volume — no junk miles. This planner helps you map out each week and tracks <b>total mileage</b>, <b>long run</b>, <b>ramp rate</b>, and <b>acute:chronic workload ratio</b> to flag whether your training load is appropriate or trending toward injury risk.`;
   container.appendChild(callout);
 
+  // Toggle-all row
+  const allOpen = weeks.every(w => openWeekNumbers.has(w.week_number));
+  const toggleAll = document.createElement('div');
+  toggleAll.className = 'toggle-all-row';
+  toggleAll.innerHTML = `<span class="toggle-all-btn">${allOpen ? '− Collapse all' : '+ Expand all'}</span>`;
+  toggleAll.querySelector('.toggle-all-btn').addEventListener('click', () => {
+    if (allOpen) openWeekNumbers.clear();
+    else weeks.forEach(w => openWeekNumbers.add(w.week_number));
+    renderDesktop();
+  });
+  container.appendChild(toggleAll);
+
   const dailyMap = buildDailyTotalsMap();
 
   for (const wk of weeks) {
@@ -1684,30 +1723,40 @@ function buildCollapsedRow(wk, dailyMap) {
 
   row.className = 'week-row' + (isPast ? ' past' : '');
 
-  // Peak ACR for the week
-  let peakACR = null;
   const wDays = days[wk.id] || [];
-  for (const day of wDays) {
-    if (dayTotal(day) > 0) {
-      const dateStr = isoDate(addDays(wStart, day.day_of_week));
-      const acr = computeACR(dateStr, dailyMap);
-      if (acr !== null && (peakACR === null || acr > peakACR)) peakACR = acr;
+  const totalMi = roundMi(weekTotal(wk.id));
+  const miStr = totalMi > 0 ? `${totalMi} mi` : (wk.target_miles > 0 ? `${wk.target_miles} mi target` : '—');
+
+  // WoW mileage + long run vs prior week
+  const prevWk = weeks.find(w => w.week_number === wk.week_number + 1);
+  let wowMiTag = '', wowLrTag = '';
+  if (prevWk) {
+    const prevDays = days[prevWk.id] || [];
+    const prevTotal = prevDays.reduce((s, d) => s + dayTotal(d), 0);
+    const thisLong  = Math.max(0, ...wDays.map(d => dayTotal(d)));
+    const prevLong  = Math.max(0, ...prevDays.map(d => dayTotal(d)));
+    if (prevTotal > 0) {
+      const pct = Math.round(((totalMi - prevTotal) / prevTotal) * 100);
+      const sign = pct >= 0 ? '+' : '';
+      const cls  = wowClass(pct);
+      wowMiTag = `<span class="wr-wow ${cls}">${sign}${pct}% mi</span>`;
+    }
+    if (prevLong > 0) {
+      const pct = Math.round(((thisLong - prevLong) / prevLong) * 100);
+      const sign = pct >= 0 ? '+' : '';
+      const cls  = wowClass(pct);
+      wowLrTag = `<span class="wr-wow ${cls}">${sign}${pct}% LR</span>`;
     }
   }
 
-  const totalMi = roundMi(weekTotal(wk.id));
-  const miStr = totalMi > 0 ? `${totalMi} mi` : (wk.target_miles > 0 ? `${wk.target_miles} mi target` : '—');
-  const acrStr = peakACR !== null ? `ACR ${Math.round(peakACR)}%` : 'ACR —';
-  const acrCls = peakACR !== null ? acrClass(peakACR) : 'dim';
-
-  const locAbbrev = {'New York':'NYC','San Francisco':'SF','Travel':'✈ Travel'}[wk.location] || wk.location;
+  const locAbbrev = {'New York':'NYC','San Francisco':'SF','Travel':'Travel'}[wk.location] || wk.location;
   row.innerHTML = `
     <i class="ti ti-chevron-right wr-chev"></i>
     <span class="wr-num">Week T-${wk.week_number}</span>
     <span class="wr-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
     <span class="wr-phase">${wk.phase} <span style="color:var(--text-tertiary);font-weight:400">·</span> ${locAbbrev}</span>
     <span class="wr-mi">${miStr}</span>
-    <span class="acr-pill ${acrCls}">${acrStr}</span>
+    <span class="wr-wow-group">${wowMiTag}${wowLrTag}</span>
   `;
 
   row.addEventListener('click', () => {
@@ -1730,17 +1779,6 @@ function buildOpenWeekBlock(wk, dailyMap) {
   const wStart = weekStartDate(plan.race_date, wk.week_number);
   const wDays  = days[wk.id] || [];
 
-  // Compute peak ACR for header pill
-  let peakACR = null;
-  for (const day of wDays) {
-    if (dayTotal(day) > 0) {
-      const dateStr = isoDate(addDays(wStart, day.day_of_week));
-      const acr = computeACR(dateStr, dailyMap);
-      if (acr !== null && (peakACR === null || acr > peakACR)) peakACR = acr;
-    }
-  }
-  const peakStr = peakACR !== null ? `peak ACR ${Math.round(peakACR)}%` : 'ACR —';
-  const peakCls = peakACR !== null ? acrClass(peakACR) : 'dim';
 
   // Header
   const hdr = document.createElement('div');
@@ -1759,7 +1797,6 @@ function buildOpenWeekBlock(wk, dailyMap) {
       <option value="San Francisco"  ${wk.location==='San Francisco'?'selected':''}>📍 SF</option>
       <option value="Travel"         ${wk.location==='Travel'?'selected':''}>✈ Travel</option>
     </select>
-    <span class="wbh-acr"><span class="acr-pill ${peakCls}">${peakStr}</span></span>
   `;
   hdr.querySelector('.ti-chevron-down').closest('.wbh').addEventListener('click', (e) => {
     if (e.target.tagName === 'SELECT') return;
@@ -1853,22 +1890,24 @@ function buildOpenWeekBlock(wk, dailyMap) {
     });
   });
 
-  block.appendChild(qRow);
+  // Week body: Q column | grid | summary (all side by side)
+  const body = document.createElement('div');
+  body.className = 'week-body';
 
-  // Week inner (grid + summary)
-  const inner = document.createElement('div');
-  inner.className = 'week-inner';
+  // Q column (left)
+  qRow.className = 'q-column';
+  body.appendChild(qRow);
 
-  // Grid pane
+  // Grid pane (center)
   const gridPane = document.createElement('div');
   gridPane.className = 'grid-pane';
   gridPane.appendChild(buildCalGrid(wk, wStart, wDays, dailyMap));
-  inner.appendChild(gridPane);
+  body.appendChild(gridPane);
 
-  // Summary pane
-  inner.appendChild(buildSummaryPane(wk, wDays));
+  // Summary pane (right)
+  body.appendChild(buildSummaryPane(wk, wDays));
 
-  block.appendChild(inner);
+  block.appendChild(body);
   return block;
 }
 
@@ -2061,11 +2100,11 @@ function buildSummaryPane(wk, wDays) {
     </div>
     <div class="sum-tile ${wowMilesCls}">
       <div class="st-val ${wowMilesCls}">${wowLabel(wowMiles)}</div>
-      <div class="st-lbl ${wowMilesCls}">WoW miles</div>
+      <div class="st-lbl ${wowMilesCls}">Miles WoW</div>
     </div>
     <div class="sum-tile ${wowLongCls}">
       <div class="st-val ${wowLongCls}">${wowLabel(wowLong)}</div>
-      <div class="st-lbl ${wowLongCls}">WoW long run</div>
+      <div class="st-lbl ${wowLongCls}">Long run WoW</div>
     </div>
     ${buildMixBarHTML(wDays)}
   `;
