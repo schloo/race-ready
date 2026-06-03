@@ -265,23 +265,62 @@ body {
 /* Goal row (3 equal columns) */
 .q-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1.4fr 88px 1fr 1fr;
   border-bottom: 0.5px solid var(--cool-border);
 }
 
-.q-context {
+/* Phase cell (col 1) */
+.q-phase-cell {
   padding: 8px 12px;
   border-right: 0.5px solid var(--cool-border);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 6px;
-  background: var(--cool-bg);
+  gap: 5px;
+  background: #fff;
 }
-.q-phase-name { font-size: 12px; font-weight: 500; }
-.q-phase-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; margin-top: 2px; }
-.q-target     { font-size: 13px; font-weight: 500; }
+.q-phase-select {
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  border: none;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 2px center;
+  color: var(--text-primary);
+  padding: 0 14px 0 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+}
+.q-phase-select:focus { outline: none; }
+.q-phase-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+/* Target cell (col 2) */
+.q-target-cell {
+  padding: 8px 10px;
+  border-right: 0.5px solid var(--cool-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3px;
+  background: #fff;
+}
 .q-target-lbl { font-size: 10px; color: var(--text-tertiary); }
+.q-target-input {
+  font-size: 18px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  border: none;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  -moz-appearance: textfield;
+}
+.q-target-input:focus { outline: none; }
+.q-target-input::-webkit-outer-spin-button,
+.q-target-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.q-target-mi { font-size: 10px; color: var(--text-tertiary); }
 
 .q-cell {
   padding: 8px 12px;
@@ -1682,49 +1721,71 @@ function buildOpenWeekBlock(wk, dailyMap) {
   });
   block.appendChild(hdr);
 
-  // Q row
+  // Q row — 4 columns: Phase | Target | Q1 | Q2
   const qRow = document.createElement('div');
   qRow.className = 'q-row';
-  const phaseDesc = PHASE_DESCS[wk.phase] || '';
 
-  const dayOptions = ['—', 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  const q1Day = getQDay(wk.id, 'Q1'); // 0-6 or null
+  const PHASES = ['Foundation','Initial Quality','Transition Quality','Final Quality','Taper'];
+  const dayOptions = ['—','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const q1Day = getQDay(wk.id, 'Q1');
   const q2Day = getQDay(wk.id, 'Q2');
 
   function daySelectHTML(q, currentDay) {
     return `<select class="q-day-select" data-week-id="${wk.id}" data-q="${q}">
       ${dayOptions.map((label, i) => {
         const val = i === 0 ? '' : String(i - 1);
-        const sel = (currentDay !== null && currentDay === i - 1) ? 'selected' : (i === 0 && currentDay === null ? 'selected' : '');
+        const sel = (currentDay !== null && currentDay === i - 1) ? 'selected'
+                  : (i === 0 && currentDay === null ? 'selected' : '');
         return `<option value="${val}" ${sel}>${label}</option>`;
       }).join('')}
     </select>`;
   }
 
   qRow.innerHTML = `
-    <div class="q-context">
-      <div>
-        <div class="q-phase-name">${wk.phase}</div>
-        <div class="q-phase-desc">${phaseDesc}</div>
-      </div>
-      <div>
-        <div class="q-target">${wk.target_miles > 0 ? wk.target_miles + ' mi' : '—'}</div>
-        <div class="q-target-lbl">weekly target</div>
-      </div>
+    <div class="q-phase-cell">
+      <select class="q-phase-select" data-week-id="${wk.id}">
+        ${PHASES.map(p => `<option value="${p}" ${wk.phase===p?'selected':''}>${p}</option>`).join('')}
+      </select>
+      <div class="q-phase-desc" id="q-phase-desc-${wk.id}">${escHtml(PHASE_DESCS[wk.phase]||'')}</div>
+    </div>
+    <div class="q-target-cell">
+      <div class="q-target-lbl">weekly target</div>
+      <input class="q-target-input" type="number" min="0" step="1"
+        data-week-id="${wk.id}" value="${wk.target_miles > 0 ? wk.target_miles : ''}" placeholder="—">
+      <div class="q-target-mi">mi / week</div>
     </div>
     <div class="q-cell">
       <div><span class="qlbl">Q1</span></div>
-      <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription" placeholder="Q1 workout prescription…">${escHtml(wk.q1_prescription||'')}</textarea>
+      <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription"
+        placeholder="Q1 workout prescription…">${escHtml(wk.q1_prescription||'')}</textarea>
       <div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q1', q1Day)}</div>
     </div>
     <div class="q-cell">
       <div><span class="qlbl">Q2</span></div>
-      <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription" placeholder="Q2 workout prescription…">${escHtml(wk.q2_prescription||'')}</textarea>
+      <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription"
+        placeholder="Q2 workout prescription…">${escHtml(wk.q2_prescription||'')}</textarea>
       <div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q2', q2Day)}</div>
     </div>
   `;
 
-  // Auto-resize and save on blur
+  // Phase change — update description + save
+  qRow.querySelector('.q-phase-select').addEventListener('change', (e) => {
+    wk.phase = e.target.value;
+    const descEl = document.getElementById(`q-phase-desc-${wk.id}`);
+    if (descEl) descEl.textContent = PHASE_DESCS[wk.phase] || '';
+    saveWeekMeta(wk);
+    // Update collapsed row label if visible
+    renderDesktop();
+  });
+
+  // Target miles — save on blur
+  qRow.querySelector('.q-target-input').addEventListener('blur', (e) => {
+    const val = parseFloat(e.target.value) || 0;
+    wk.target_miles = val;
+    saveWeekMeta(wk);
+  });
+
+  // Prescription textareas — auto-resize + save on blur
   qRow.querySelectorAll('.q-prescription').forEach(ta => {
     autoResizeTextarea(ta);
     ta.addEventListener('input', () => autoResizeTextarea(ta));
