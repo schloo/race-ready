@@ -369,6 +369,7 @@ body {
   min-height: 60px;
   white-space: pre-wrap;
 }
+.q-prescription::placeholder { color: var(--text-tertiary); opacity: 0.6; }
 
 /* ── Week inner: grid + summary panel ── */
 /* Week body: Q column | grid | summary side by side */
@@ -493,6 +494,7 @@ body {
   background: #fffde7;
   cursor: text;
 }
+.pace-input::placeholder { color: #ccc; }
 /* Highlight the whole cell when input is focused */
 .cal-grid td:has(.pace-input:focus) { background: #fffde7 !important; }
 
@@ -1718,7 +1720,7 @@ function buildCollapsedRow(wk, dailyMap) {
 
   const wDays = days[wk.id] || [];
   const totalMi = roundMi(weekTotal(wk.id));
-  const miStr = totalMi > 0 ? `${totalMi} mi` : (wk.target_miles > 0 ? `${wk.target_miles} mi target` : '—');
+  const miStr = totalMi > 0 ? `${totalMi} mi planned` : (wk.target_miles > 0 ? `${wk.target_miles} mi target` : '—');
 
   // WoW mileage + long run vs prior week
   const prevWk = weeks.find(w => w.week_number === wk.week_number + 1);
@@ -1732,7 +1734,7 @@ function buildCollapsedRow(wk, dailyMap) {
       const pct = Math.round(((totalMi - prevTotal) / prevTotal) * 100);
       const sign = pct >= 0 ? '+' : '';
       const cls  = wowClass(pct);
-      wowMiTag = `<span class="wr-wow ${cls}">${sign}${pct}% mi</span>`;
+      wowMiTag = `<span class="wr-wow ${cls}">${sign}${pct}% weekly mi</span>`;
     }
     if (prevLong > 0) {
       const pct = Math.round(((thisLong - prevLong) / prevLong) * 100);
@@ -1786,8 +1788,8 @@ function buildOpenWeekBlock(wk, dailyMap) {
       ${PHASES.map(p => `<option value="${p}" ${wk.phase===p?'selected':''}>${p}</option>`).join('')}
     </select>
     <select class="loc-select" data-week-id="${wk.id}" title="Training location">
-      <option value="New York"       ${wk.location==='New York'?'selected':''}>📍 NYC</option>
-      <option value="San Francisco"  ${wk.location==='San Francisco'?'selected':''}>📍 SF</option>
+      <option value="New York"       ${wk.location==='New York'?'selected':''}>NYC</option>
+      <option value="San Francisco"  ${wk.location==='San Francisco'?'selected':''}>SF</option>
       <option value="Travel"         ${wk.location==='Travel'?'selected':''}>✈ Travel</option>
     </select>
   `;
@@ -1922,17 +1924,23 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   const q1DayInGrid = wDays.find(x => (x.tags||[]).includes('Q1'))?.day_of_week ?? -1;
   const q2DayInGrid = wDays.find(x => (x.tags||[]).includes('Q2'))?.day_of_week ?? -1;
 
-  // Row 1: day names + dates + Q chip if assigned
+  // Row 1: day names + dates; Q days get full Q-color header cell
   const hdrRow = document.createElement('tr');
-  hdrRow.innerHTML = '<th class="rl"></th>';
+  const rlTh = document.createElement('th');
+  rlTh.className = 'rl';
+  hdrRow.appendChild(rlTh);
   for (let d = 0; d < 7; d++) {
     const date = addDays(wStart, d);
-    const qLabel = d === q1DayInGrid ? 'Q1' : d === q2DayInGrid ? 'Q2' : null;
-    hdrRow.innerHTML += `<th>
-      <div class="day-head-name">${DAY_NAMES[d]}</div>
-      <div class="day-head-date">${fmtDate(date, {month:'short', day:'numeric'})}</div>
-      ${qLabel ? `<div class="day-q-chip">${qLabel}</div>` : ''}
-    </th>`;
+    const isQ1 = d === q1DayInGrid;
+    const isQ2 = d === q2DayInGrid;
+    const th = document.createElement('th');
+    if (isQ1 || isQ2) {
+      th.style.background = 'var(--q-bg)';
+      th.style.color = 'var(--q-text)';
+    }
+    th.innerHTML = `<div class="day-head-name">${DAY_NAMES[d]}</div>
+      <div class="day-head-date" style="${isQ1||isQ2 ? 'color:var(--q-text);opacity:0.7' : ''}">${fmtDate(date, {month:'short', day:'numeric'})}</div>`;
+    hdrRow.appendChild(th);
   }
   thead.appendChild(hdrRow);
   table.appendChild(thead);
@@ -1976,7 +1984,7 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   for (let d = 0; d < 7; d++) {
     const dayData = wDays.find(x => x.day_of_week === d);
     const tot = dayData ? roundMi(dayTotal(dayData)) : 0;
-    totRow.innerHTML += `<td class="tot-val" data-week-id="${wk.id}" data-day="${d}">${tot || 0}</td>`;
+    totRow.innerHTML += `<td class="tot-val" data-week-id="${wk.id}" data-day="${d}" style="${tot ? '' : 'color:#ccc'}">${tot || 0}</td>`;
   }
   tbody.appendChild(totRow);
 
@@ -1995,10 +2003,10 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
         td.className = `acr-cell ${cls}`;
         td.textContent = `${Math.round(acr)}%`;
       } else {
-        td.textContent = '—';
+        td.textContent = '—'; td.style.color = '#ccc';
       }
     } else {
-      td.textContent = '—';
+      td.textContent = '—'; td.style.color = '#ccc';
     }
     acrRow.appendChild(td);
   }
@@ -2093,11 +2101,11 @@ function buildSummaryPane(wk, wDays) {
     </div>
     <div class="sum-tile ${wowMilesCls}">
       <div class="st-val ${wowMilesCls}">${wowLabel(wowMiles)}</div>
-      <div class="st-lbl ${wowMilesCls}">Miles WoW</div>
+      <div class="st-lbl ${wowMilesCls}">Weekly Miles WoW</div>
     </div>
     <div class="sum-tile ${wowLongCls}">
       <div class="st-val ${wowLongCls}">${wowLabel(wowLong)}</div>
-      <div class="st-lbl ${wowLongCls}">Long run WoW</div>
+      <div class="st-lbl ${wowLongCls}">Long Run WoW</div>
     </div>
     ${buildMixBarHTML(wDays)}
   `;
