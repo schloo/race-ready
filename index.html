@@ -39,7 +39,7 @@ input[type="number"] { -moz-appearance: textfield; }
   --r-bg: #e8d0f0; --r-text: #3a1048; --r-border: #a070c0;
 
   /* Q tag */
-  --q-bg: #1a1f2e; --q-text: #8aacce; --q-border: #2e3f68;
+  --q-bg: #daeafc; --q-text: #1a5aaa; --q-border: #80b4e8;
 
   /* ACR zone colors */
   --acr-purple-bg: #EEEDFE; --acr-purple-text: #3C3489;
@@ -517,12 +517,12 @@ body {
 
 /* ACR row */
 .acr-row td.rl { background: #fff !important; font-size: 11px; color: var(--text-secondary); }
-.acr-cell { font-size: 11px; font-weight: 500; }
-.acr-cell.purple { background: var(--acr-purple-bg) !important; color: var(--acr-purple-text); }
-.acr-cell.blue   { background: var(--acr-blue-bg)   !important; color: var(--acr-blue-text); }
-.acr-cell.green  { background: var(--acr-green-bg)  !important; color: var(--acr-green-text); }
-.acr-cell.orange { background: var(--acr-orange-bg) !important; color: var(--acr-orange-text); }
-.acr-cell.red    { background: var(--acr-red-bg)    !important; color: var(--acr-red-text); }
+.acr-cell { font-size: 11px; font-weight: 500; background: #fff !important; }
+.acr-cell.purple { color: var(--acr-purple-text); }
+.acr-cell.blue   { color: var(--acr-blue-text); }
+.acr-cell.green  { color: var(--acr-green-text); }
+.acr-cell.orange { color: var(--acr-orange-text); }
+.acr-cell.red    { color: var(--acr-red-text); }
 
 /* Tags row */
 .tag-cell { padding: 3px; vertical-align: top; }
@@ -555,32 +555,26 @@ body {
   background: #fff;
 }
 
+/* Metrics tiles — neutral bg always; color in text only for warnings */
 .sum-tile {
   border-radius: 8px;
   padding: 7px 10px;
-  border: 0.5px solid transparent;
+  border: 0.5px solid var(--cool-border);
+  background: #fff;
 }
-.sum-tile.green  { background: var(--e-bg);  border-color: var(--e-border); }
-.sum-tile.orange { background: var(--t-bg);  border-color: var(--t-border); }
-.sum-tile.red    { background: var(--i-bg);  border-color: var(--i-border); }
-.sum-tile.neutral{ background: var(--cool-bg); border-color: var(--cool-border); }
 
-.st-val { font-size: 18px; font-weight: 500; line-height: 1; }
-.st-val.green  { color: var(--e-text); }
-.st-val.orange { color: var(--t-text); }
-.st-val.red    { color: var(--i-text); }
-.st-val.neutral{ color: var(--text-primary); }
+.st-val { font-size: 18px; font-weight: 500; line-height: 1; color: var(--text-primary); }
+.st-val.orange { color: var(--acr-orange-text); }
+.st-val.red    { color: var(--acr-red-text); }
 
-.st-lbl { font-size: 11px; margin-top: 2px; }
-.st-lbl.green  { color: var(--acr-green-text); }
+.st-lbl { font-size: 11px; margin-top: 2px; color: var(--text-secondary); }
 .st-lbl.orange { color: var(--acr-orange-text); }
 .st-lbl.red    { color: var(--acr-red-text); }
-.st-lbl.neutral{ color: var(--text-secondary); }
 
 .mix-wrap {
   border-radius: 8px;
   padding: 7px 10px;
-  background: var(--cool-bg);
+  background: #fff;
   border: 0.5px solid var(--cool-border);
 }
 .mix-label {
@@ -593,7 +587,7 @@ body {
 }
 .mix-bar {
   display: flex;
-  height: 5px;
+  height: 6px;
   border-radius: 3px;
   overflow: hidden;
   background: var(--cool-border);
@@ -1555,7 +1549,7 @@ const DAY_NAMES  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const PACE_KEYS  = ['easy','marathon','threshold','interval','repetition'];
 const PACE_LABELS= ['Easy','Marathon','Threshold','Interval','Repetition'];
 const PACE_CODES = ['E','M','T','I','R'];
-const PACE_COLORS= ['#e8c800','#d4900a','#d06030','#d03030','#9050b0'];
+const PACE_COLORS= ['#e8d060','#d4a050','#d47060','#cc4848','#a070c0'];
 
 const PHASE_DESCS = {
   'Foundation':        'Build aerobic base. Easy mileage, strides, light strength work.',
@@ -1620,7 +1614,7 @@ function wowClass(pct) {
   if (pct > 20)  return 'red';
   if (pct > 10)  return 'orange';
   if (pct < -15) return 'orange';
-  return 'green';
+  return 'neutral';
 }
 
 function wowLabel(pct, suffix='') {
@@ -1631,8 +1625,7 @@ function wowLabel(pct, suffix='') {
 
 function vsTargetClass(diff) {
   if (diff === null) return 'neutral';
-  if (diff >= 0) return 'green';
-  return 'orange';
+  return 'neutral';
 }
 
 function roundMi(n) {
