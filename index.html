@@ -285,7 +285,7 @@ body {
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 5px;
   background: #fff;
 }
@@ -322,6 +322,8 @@ body {
   color: var(--text-secondary);
   line-height: 1.7;
   background: #fff;
+  display: flex;
+  flex-direction: column;
 }
 /* Q cells stack vertically inside q-column; top border handled by q-column > * + * */
 
@@ -338,13 +340,17 @@ body {
   margin-bottom: 4px;
 }
 
-/* Q label row — chip + "assigned to" select on same line */
-.q-label-row {
+/* Q label row — just the chip at top */
+.q-label-row { margin-bottom: 5px; }
+
+/* Day assignment row — anchored to bottom of cell */
+.q-day-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 5px;
-  flex-wrap: nowrap;
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 0.5px solid var(--cool-border);
 }
 .q-day-lbl { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
 .q-day-select {
@@ -1661,7 +1667,7 @@ function wowClass(pct) {
   if (pct === null || pct === undefined) return 'neutral';
   if (pct > 20)  return 'red';
   if (pct > 10)  return 'orange';
-  if (pct < -15) return 'orange';
+  // decreases are not a problem — no alert color
   return 'neutral';
 }
 
@@ -1897,16 +1903,18 @@ function buildOpenWeekBlock(wk, dailyMap) {
       </div>
     </div>
     <div class="q-cell ${isNoQ ? '' : 'editable-cell'}">
-      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q1</span><span class="q-day-lbl">→</span>${daySelectHTML('Q1', q1Day)}</div>`}
+      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q1</span></div>`}
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription"
         ${isNoQ ? 'readonly style="color:var(--text-tertiary)"' : ''}
         placeholder="Q1 workout prescription…">${escHtml(q1Text)}</textarea>
+      ${isNoQ ? '' : `<div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q1', q1Day)}</div>`}
     </div>
     <div class="q-cell ${isNoQ ? '' : 'editable-cell'}">
-      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q2</span><span class="q-day-lbl">→</span>${daySelectHTML('Q2', q2Day)}</div>`}
+      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q2</span></div>`}
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription"
         ${isNoQ ? 'readonly style="color:var(--text-tertiary)"' : ''}
         placeholder="Q2 workout prescription…">${escHtml(q2Text)}</textarea>
+      ${isNoQ ? '' : `<div class="q-day-row"><span class="q-day-lbl">Assigned to</span>${daySelectHTML('Q2', q2Day)}</div>`}
     </div>
   `;
 
@@ -2177,7 +2185,7 @@ function buildMixBarHTML(wDays) {
   const pcts = totals.map(v => sum > 0 ? Math.round(v / sum * 100) : 0);
 
   const barParts = PACE_CODES.map((c, i) =>
-    `<div style="flex:${totals[i] || 0.001};background:${PACE_COLORS[i]}"></div>`
+    `<div style="flex:${totals[i] || 0.001};background:${PACE_COLORS[i]};box-shadow:${i > 0 ? '-1px 0 0 #fff' : 'none'}"></div>`
   ).join('');
 
   const legend = PACE_CODES.map((c, i) =>
@@ -2374,7 +2382,7 @@ function renderMobile() {
   const mixSum = totals.reduce((a,b)=>a+b,0);
   const pcts = totals.map(v => mixSum>0 ? Math.round(v/mixSum*100) : 0);
   document.getElementById('m-mix-bar').innerHTML =
-    PACE_CODES.map((c,i) => `<div style="flex:${totals[i]||0.001};background:${PACE_COLORS[i]}"></div>`).join('');
+    PACE_CODES.map((c,i) => `<div style="flex:${totals[i]||0.001};background:${PACE_COLORS[i]};box-shadow:${i>0?'-1px 0 0 #fff':'none'}"></div>`).join('');
   document.getElementById('m-mix-legend').innerHTML =
     PACE_CODES.map((c,i) => `<span class="m-mix-item"><span class="m-mix-dot" style="background:${PACE_COLORS[i]}"></span>${c} ${pcts[i]}%</span>`).join('');
 
