@@ -10,7 +10,7 @@ A marathon training planner built on the Daniels 2Q methodology. Plan each week 
 
 | Layer | Choice |
 |---|---|
-| Frontend | Single HTML/CSS/JS file — no build step |
+| Frontend | Static `index.html` + `styles.css` + `app.js` — no build step |
 | Database | Supabase (Postgres via REST API) |
 | Hosting | Netlify (static drag-and-drop deploy) |
 | AI | Anthropic API (`claude-sonnet-4-20250514`) for mileage ramp generation |
@@ -28,7 +28,7 @@ The database is already configured at `https://kmzbdoxfhrksimfgxhdb.supabase.co`
 1. Create a new project at [supabase.com](https://supabase.com)
 2. In the Supabase dashboard → **SQL Editor**, paste and run `schema.sql`
 3. Copy your **Project URL** and **anon public key** from Settings → API
-4. In `index.html`, replace the two config constants near the top of the `<script>` tag:
+4. In `app.js`, replace the two config constants at the top:
 
 ```js
 const SUPABASE_URL  = 'https://your-project.supabase.co';
