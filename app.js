@@ -733,11 +733,11 @@ function buildSummaryPane(wk, wDays) {
     </div>
     <div class="sum-tile ${wowMilesCls}">
       <div class="st-val ${wowMilesCls}">${wowLabel(wowMiles)}</div>
-      <div class="st-lbl ${wowMilesCls}">vs Peak Weekly Miles</div>
+      <div class="st-lbl ${wowMilesCls}">Peak Weekly Mileage</div>
     </div>
     <div class="sum-tile ${wowLongCls}">
       <div class="st-val ${wowLongCls}">${wowLabel(wowLong)}</div>
-      <div class="st-lbl ${wowLongCls}">vs Peak Long Run</div>
+      <div class="st-lbl ${wowLongCls}">Peak Long Run Distance</div>
     </div>
     ${buildMixBarHTML(wDays)}
   `;
