@@ -397,6 +397,7 @@ function buildOpenWeekBlock(wk, dailyMap) {
   const q2Day = getQDay(wk.id, 'Q2');
 
   function daySelectHTML(q, currentDay) {
+    const isNA = q === 'Q1' ? (wk.q1_na || false) : (wk.q2_na || false);
     const opts = [
       { label: '—',         val: ''        },
       { label: 'Monday',    val: '0'       },
@@ -410,8 +411,9 @@ function buildOpenWeekBlock(wk, dailyMap) {
     ];
     return `<select class="q-day-select" data-week-id="${wk.id}" data-q="${q}">
       ${opts.map(({ label, val }) => {
-        const sel = currentDay !== null && String(currentDay) === val ? 'selected'
-                  : currentDay === null && val === '' ? 'selected' : '';
+        const sel = isNA && val === NAY_VAL ? 'selected'
+                  : !isNA && currentDay !== null && String(currentDay) === val ? 'selected'
+                  : !isNA && currentDay === null && val === '' ? 'selected' : '';
         return `<option value="${val}" ${sel}>${label}</option>`;
       }).join('')}
     </select>`;
@@ -491,6 +493,10 @@ function buildOpenWeekBlock(wk, dailyMap) {
       const val = sel.value;
       const dayVal = (val === '' || val === NAY_VAL) ? null : parseInt(val);
       syncQPrescriptionDisplay(sel);
+      // Persist N/A flag
+      if (q === 'Q1') wk.q1_na = (val === NAY_VAL);
+      else            wk.q2_na = (val === NAY_VAL);
+      await saveWeekMeta(wk);
       await assignQDay(wk.id, q, dayVal);
       // Don't rerenderOpenWeek — just update the grid Q-day coloring
       const dailyMapFresh = buildDailyTotalsMap();
@@ -1297,6 +1303,8 @@ async function saveWeekMeta(wk) {
       target_miles: wk.target_miles,
       q1_prescription: wk.q1_prescription,
       q2_prescription: wk.q2_prescription,
+      q1_na: wk.q1_na || false,
+      q2_na: wk.q2_na || false,
     }
   );
 }
