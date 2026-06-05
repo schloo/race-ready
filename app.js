@@ -132,6 +132,11 @@ function computeLoadMax(dateStr, dailyMap) {
   const rolling6  = computeRolling6(dateStr, dailyMap);
   return Math.max(0, (1.30 * chronic) - rolling6);
 }
+function computeLoadMax150(dateStr, dailyMap) {
+  const chronic   = computeChronicLoad(dateStr, dailyMap);
+  const rolling6  = computeRolling6(dateStr, dailyMap);
+  return Math.max(0, (1.50 * chronic) - rolling6);
+}
 
 function computeLoadMin(dateStr, dailyMap) {
   const chronic   = computeChronicLoad(dateStr, dailyMap);
@@ -442,14 +447,48 @@ function buildOpenWeekBlock(wk, dailyMap) {
     });
   });
 
-  // Q day assignment — N/A just unassigns; prescription is never touched
+  const NO_Q_DISPLAY = 'No Q sessions this week; Easy runs all week + add 6-8 ST on 2 days';
+
+  // Helper: swap prescription textarea ↔ readonly N/A message
+  function syncQPrescriptionDisplay(sel) {
+    const q     = sel.dataset.q;
+    const field = q === 'Q1' ? 'q1_prescription' : 'q2_prescription';
+    const cell  = sel.closest('.q-cell');
+    if (!cell) return;
+    const ta    = cell.querySelector('.q-prescription');
+    let   noqDiv = cell.querySelector('.no-q-display');
+
+    if (sel.value === NAY_VAL) {
+      // Show readonly N/A message; hide textarea
+      if (ta) ta.style.display = 'none';
+      if (!noqDiv) {
+        noqDiv = document.createElement('div');
+        noqDiv.className = 'no-q-display';
+        noqDiv.textContent = NO_Q_DISPLAY;
+        cell.appendChild(noqDiv);
+      }
+      noqDiv.style.display = '';
+    } else {
+      // Show editable textarea; hide N/A message
+      if (ta) ta.style.display = '';
+      if (noqDiv) noqDiv.style.display = 'none';
+    }
+  }
+
+  // Apply initial state for any N/A selects
   qRow.querySelectorAll('.q-day-select').forEach(sel => {
+    syncQPrescriptionDisplay(sel);
     sel.addEventListener('change', async () => {
       const q   = sel.dataset.q;
       const val = sel.value;
       const dayVal = (val === '' || val === NAY_VAL) ? null : parseInt(val);
+      syncQPrescriptionDisplay(sel);
       await assignQDay(wk.id, q, dayVal);
-      rerenderOpenWeek();
+      // Don't rerenderOpenWeek — just update the grid Q-day coloring
+      const dailyMapFresh = buildDailyTotalsMap();
+      const newGrid = buildCalGrid(wk, weekStartDate(plan.race_date, wk.week_number), days[wk.id] || [], dailyMapFresh);
+      const existingGrid = document.querySelector(`.week-block[data-week-id="${wk.id}"] .grid-pane table`);
+      if (existingGrid) existingGrid.replaceWith(newGrid);
     });
   });
 
@@ -549,7 +588,7 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   // Total row
   const totRow = document.createElement('tr');
   totRow.className = 'tot-row';
-  totRow.innerHTML = `<td class="rl" style="background:#fff!important">Total</td>`;
+  totRow.innerHTML = `<td class="rl">Total</td>`;
   for (let d = 0; d < 7; d++) {
     const dayData = wDays.find(x => x.day_of_week === d);
     const tot = dayData ? roundMi(dayTotal(dayData)) : 0;
@@ -596,8 +635,9 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
     const dayData = wDays.find(x => x.day_of_week === d);
     const todayMi = dayData ? roundMi(dayTotal(dayData)) : 0;
     const lmax    = roundMi(computeLoadMax(dateStr, dailyMap));
+    const lmax150 = roundMi(computeLoadMax150(dateStr, dailyMap));
     const lmin    = roundMi(computeLoadMin(dateStr, dailyMap));
-    renderLoadOverCell(td, todayMi, lmax, lmin);
+    renderLoadOverCell(td, todayMi, lmax, lmax150, lmin);
     loadOverRow.appendChild(td);
   }
   tbody.appendChild(loadOverRow);
@@ -778,28 +818,42 @@ function renderLoadMaxCell(td, lmax) {
   }
 }
 
-function renderLoadOverCell(td, todayMi, lmax, lmin) {
+function renderLoadOverCell(td, todayMi, lmax, lmax150, lmin) {
   td.innerHTML = '';
-  if (todayMi > lmax) {
-    const over = roundMi(todayMi - lmax);
+  td.style.color = '';
+  td.style.fontWeight = '';
+
+  if (todayMi > lmax150) {
+    // >150%: interval red
+    const over = roundMi(todayMi - lmax150);
     const chip = document.createElement('span');
     chip.className = 'overage-chip red';
     chip.textContent = `+${over}`;
-    chip.title = `You're ${over} miles over the recommended daily max. Reducing by ${over} miles would bring you back into the healthy training zone and reduce overuse injury risk.`;
+    chip.title = `High injury risk: you're ${roundMi(todayMi - lmax)} miles over the 130% threshold and ${over} miles over the 150% threshold. Significantly reduce today's mileage to stay safe.`;
+    td.appendChild(chip);
+  } else if (todayMi > lmax) {
+    // 130–150%: marathon orange caution
+    const over = roundMi(todayMi - lmax);
+    const chip = document.createElement('span');
+    chip.className = 'overage-chip orange';
+    chip.textContent = `+${over}`;
+    chip.title = `Caution: you're ${over} miles over the 130% safe-load threshold. Reducing by ${over} miles would bring you back into the healthy training zone.`;
     td.appendChild(chip);
   } else if (todayMi < lmin) {
+    // <80%: blue underload
     const deficit = roundMi(lmin - todayMi);
     const chip = document.createElement('span');
     chip.className = 'overage-chip blue';
     chip.textContent = `−${deficit}`;
-    chip.title = `You're ${deficit} miles below the minimum recommended load for today. Running ${deficit} more miles would bring you to the low end of the healthy training zone. Extended time below 80% load risks detraining.`;
+    chip.title = `You're ${deficit} miles below the minimum recommended load for today. Running ${deficit} more miles would bring you to the low end of the healthy zone. Extended time below 80% load risks detraining.`;
     td.appendChild(chip);
   } else {
-    // In zone — show headroom to max in gray
+    // In zone — white chip, gray text, no tooltip
     const headroom = roundMi(lmax - todayMi);
-    td.style.color = '#bbb';
-    td.style.fontWeight = '';
-    td.textContent = headroom > 0 ? `−${headroom}` : '0';
+    const chip = document.createElement('span');
+    chip.className = 'overage-chip neutral';
+    chip.textContent = headroom > 0 ? `−${headroom}` : '0';
+    td.appendChild(chip);
   }
 }
 
@@ -837,9 +891,10 @@ function refreshAllLoadRows() {
       // Load Overage cell
       const loCell = block.querySelector(`[data-load-over][data-week-id="${wk.id}"][data-day="${d}"]`);
       if (loCell) {
-        const lmax = roundMi(computeLoadMax(dateStr, dailyMap));
-        const lmin = roundMi(computeLoadMin(dateStr, dailyMap));
-        renderLoadOverCell(loCell, todayMi, lmax, lmin);
+        const lmax    = roundMi(computeLoadMax(dateStr, dailyMap));
+        const lmax150 = roundMi(computeLoadMax150(dateStr, dailyMap));
+        const lmin    = roundMi(computeLoadMin(dateStr, dailyMap));
+        renderLoadOverCell(loCell, todayMi, lmax, lmax150, lmin);
       }
     }
   }

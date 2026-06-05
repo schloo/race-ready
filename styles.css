@@ -453,6 +453,15 @@ body {
 }
 .q-prescription::placeholder { color: var(--text-tertiary); opacity: 0.6; }
 
+/* N/A readonly message shown instead of textarea */
+.no-q-display {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  font-style: italic;
+  padding: 2px 0;
+}
+
 /* ── Week inner: grid + summary panel ── */
 /* Week body: Q column | grid | summary side by side */
 /* Outer tile */
@@ -532,7 +541,7 @@ body {
   white-space: nowrap;
 }
 
-.day-head-name { font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--text-primary); }
+.day-head-name { font-size: 11px; font-weight: var(--fw-semibold); color: var(--text-primary); }
 .day-head-date { font-size: 9px; color: var(--text-tertiary); margin-top: 1px; }
 /* Pace row label colors */
 .pace-lbl.E { background: var(--e-bg); color: var(--e-text); }
@@ -584,7 +593,7 @@ body {
   color: var(--text-secondary);
   font-weight: var(--fw-medium);
   padding: 5px 6px;
-  background: #fff !important;
+  /* inherits .tot-row td background #eef2f8 */
 }
 .tot-row td.tot-val { font-weight: 500; color: var(--text-primary); }
 
@@ -603,8 +612,10 @@ body {
   font-weight: 500;
   white-space: nowrap;
 }
-.overage-chip.red  { background: var(--acr-red-bg);  color: var(--acr-red-text); }
-.overage-chip.blue { background: var(--acr-blue-bg); color: var(--acr-blue-text); }
+.overage-chip.red     { background: var(--i-bg);       color: var(--i-text); }
+.overage-chip.orange  { background: var(--m-bg);       color: var(--m-text); }
+.overage-chip.blue    { background: var(--acr-blue-bg); color: var(--acr-blue-text); }
+.overage-chip.neutral { background: #fff; color: #bbb; border: 0.5px solid var(--cool-border); }
 .acr-cell { font-size: 11px; font-weight: 500; background: #fff !important; }
 
 /* Dashed-underline tooltip — applies to any element with data-tip or title + .tip-text */
