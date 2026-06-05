@@ -1050,18 +1050,19 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── MOBILE ── */
-@media (max-width: 640px) {
-  /* Hide desktop elements */
-  .pace-chip-group { display: none; }
+@media (max-width: 875px) {
+  /* Hide desktop elements, show mobile */
+  .pace-chip-group-wrap { display: none; }
+  .topbar-center { display: none; }
   .ramp-btn span { display: none; }
   .ramp-btn { padding: 0; width: 30px; height: 30px; justify-content: center; }
   #main { padding: 0; gap: 0; overflow: hidden; }
 
-  /* Mobile topbar — single row: title+subtitle left, buttons right */
-  #topbar { padding: 10px 14px 8px; flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+  /* Mobile topbar — stacked title/subtitle, buttons right */
+  #topbar { padding: 10px 14px 8px; flex-direction: row; align-items: center; gap: 8px; }
   .topbar-left { flex: 1; min-width: 0; }
-  .topbar-right { flex-shrink: 0; display: flex; gap: 6px; align-items: center; }
-  .plan-title  { font-size: 13px; }
+  .topbar-right { flex: 0; display: flex; gap: 6px; align-items: center; }
+  .plan-title  { font-size: 14px; font-weight: 600; }
 
   /* Pace strip (mobile) */
   #mobile-pace-strip {
@@ -1273,7 +1274,7 @@ body {
 }
 
 /* Hide mobile view on desktop */
-@media (min-width: 641px) {
+@media (min-width: 876px) {
   #mobile-view { display: none; }
   #desktop-view { display: contents; }
   #mobile-pace-strip { display: none; }
