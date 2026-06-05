@@ -117,7 +117,6 @@ body {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 13px 20px;
   background: #fff;
   border-bottom: 0.5px solid var(--cool-border);
@@ -125,16 +124,22 @@ body {
 }
 
 .topbar-left {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 14px;
   min-width: 0;
+}
+
+.topbar-center {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .title-stack {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
@@ -226,10 +231,11 @@ body {
 .pace-edit-btn:hover { color: var(--text-primary); }
 
 .topbar-right {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  justify-content: flex-end;
 }
 
 /* Settings key button */
@@ -279,7 +285,8 @@ body {
 .week-row {
   border: 0.5px solid var(--cool-border);
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 0 12px;
+  height: 34px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -325,7 +332,8 @@ body {
 
 /* Week block header — color tiers by timeframe */
 .wbh {
-  padding: 6px 12px;
+  padding: 0 12px;
+  height: 34px;
   background: var(--cool-bg);
   border-bottom: 0.5px solid var(--cool-border);
   display: flex;
@@ -588,7 +596,7 @@ body {
 /* Total row */
 .tot-row td { border-top: 2px solid var(--cool-border) !important; }
 .tot-row td {
-  background: #e0e6ed !important;
+  background: #e4ecf4 !important;
   font-size: 12px;
   font-weight: 400;
   color: var(--text-primary);

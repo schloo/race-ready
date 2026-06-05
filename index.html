@@ -23,7 +23,9 @@
         <span id="plan-subtitle-text">—</span>
       </div>
     </div>
-    <!-- Desktop pace chip group -->
+  </div>
+  <!-- Desktop pace chip group — centered -->
+  <div class="topbar-center">
     <div class="pace-chip-group-wrap">
       <span class="pace-chip-group-lbl">Paces</span>
       <div class="pace-chip-group" id="pace-chip-group" title="Edit paces">
@@ -37,16 +39,13 @@
     </div>
   </div>
   <div class="topbar-right">
-    <button class="icon-btn" id="open-api-key" title="API key settings">
-      <i class="ti ti-key"></i>
-    </button>
     <button class="ramp-btn" id="open-ramp">
       <svg width="16" height="14" viewBox="0 0 20 16" fill="none">
         <line x1="3" y1="1" x2="3" y2="13" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
         <line x1="3" y1="13" x2="19" y2="13" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
         <path d="M3 13 C7 13 10 12 13 10 C15 8.5 17 5 19 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
       </svg>
-      <span>Mileage ramp</span>
+      <span>Mileage Ramp</span>
     </button>
   </div>
 </div>
@@ -184,7 +183,7 @@
       </div>
       <div class="pop-error" id="ramp-error"></div>
       <div class="pop-action-row">
-        <button class="pop-btn" id="ramp-generate">
+        <button class="pop-btn" id="ramp-generate" disabled style="opacity:0.4;cursor:not-allowed">
           <i class="ti ti-wand" style="font-size:12px"></i> Generate weekly targets ↗
         </button>
         <span class="pop-btn-note">overwrites selected range only</span>
@@ -219,26 +218,6 @@
   </div>
 </div>
 
-<!-- API key settings -->
-<div class="popover-backdrop" id="apikey-backdrop">
-  <div class="popover" id="apikey-popover" style="top:52px;right:16px;">
-    <div class="popover-header">
-      <span class="popover-title"><i class="ti ti-key" style="font-size:13px"></i> Anthropic API key</span>
-      <button class="popover-close" data-close="apikey"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="popover-body">
-      <p class="apikey-note">Your API key is stored only in this browser's localStorage and is never sent anywhere except directly to Anthropic's API. It is used only for the mileage ramp generator.</p>
-      <div class="pop-field">
-        <div class="pop-label">API key</div>
-        <input class="pop-input full" type="password" id="apikey-input" placeholder="sk-ant-…">
-      </div>
-      <div class="pop-action-row">
-        <button class="pop-btn" id="apikey-save">Save key</button>
-        <button class="pop-btn" id="apikey-clear" style="color:var(--text-tertiary)">Clear</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Mobile bottom sheets -->
 <div class="sheet-backdrop" id="m-plan-settings-backdrop">
