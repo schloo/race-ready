@@ -277,6 +277,7 @@ body {
   flex-direction: column;
   gap: 5px;
   background: #fff;
+  max-width: 1020px;
 }
 
 /* ── Collapsed week row ── */
@@ -550,7 +551,6 @@ body {
 .grid-pane {
   flex: 1;
   min-width: 0;
-  max-width: 600px;
   overflow-x: auto;
   background: #fff;
   border: 0.5px solid var(--cool-border);
