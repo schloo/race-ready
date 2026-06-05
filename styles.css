@@ -588,8 +588,10 @@ body {
 }
 .tot-row td.tot-val { font-weight: 500; color: var(--text-primary); }
 
-/* ACR row */
-.acr-row td.rl { background: #fff !important; font-size: var(--fs-sm); color: var(--text-secondary); font-weight: var(--fw-medium); }
+/* Load rows (Load Max + Load Overage) */
+.acr-row:first-of-type td { border-top: 1.5px solid var(--cool-border); }
+.acr-row td { font-size: 11px; background: #fff !important; text-align: center; vertical-align: middle; }
+.acr-row td.rl { background: #fff !important; font-size: var(--fs-sm); color: var(--text-secondary); font-weight: var(--fw-medium); text-align: left; }
 .acr-cell { font-size: 11px; font-weight: 500; background: #fff !important; }
 
 /* ACR info tooltip */

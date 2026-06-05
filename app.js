@@ -107,17 +107,47 @@ function buildDailyTotalsMap() {
   return map;
 }
 
-function computeACR(dateStr, dailyMap) {
+function computeChronicLoad(dateStr, dailyMap) {
+  // 28-day trailing average weekly mileage ÷ 4
   const target = parseDate(dateStr);
-  let acute = 0, chronic = 0;
-  for (let i = 0; i < 28; i++) {
-    const d = isoDate(addDays(target, -i));
-    const mi = dailyMap[d] || 0;
-    if (i < 7) acute += mi;
-    chronic += mi;
+  let chronic = 0;
+  for (let i = 1; i <= 28; i++) {
+    chronic += dailyMap[isoDate(addDays(target, -i))] || 0;
   }
-  chronic /= 4;
+  return chronic / 4; // average weekly miles
+}
+
+function computeRolling6(dateStr, dailyMap) {
+  // Sum of 6 days preceding this day (not including today)
+  const target = parseDate(dateStr);
+  let sum = 0;
+  for (let i = 1; i <= 6; i++) {
+    sum += dailyMap[isoDate(addDays(target, -i))] || 0;
+  }
+  return sum;
+}
+
+function computeLoadMax(dateStr, dailyMap) {
+  const chronic   = computeChronicLoad(dateStr, dailyMap);
+  const rolling6  = computeRolling6(dateStr, dailyMap);
+  return Math.max(0, (1.30 * chronic) - rolling6);
+}
+
+function computeLoadMin(dateStr, dailyMap) {
+  const chronic   = computeChronicLoad(dateStr, dailyMap);
+  const rolling6  = computeRolling6(dateStr, dailyMap);
+  return Math.max(0, (0.80 * chronic) - rolling6);
+}
+
+// Keep computeACR for mobile display
+function computeACR(dateStr, dailyMap) {
+  const chronic = computeChronicLoad(dateStr, dailyMap);
   if (chronic === 0) return null;
+  const target = parseDate(dateStr);
+  let acute = 0;
+  for (let i = 0; i < 7; i++) {
+    acute += dailyMap[isoDate(addDays(target, -i))] || 0;
+  }
   return (acute / chronic) * 100;
 }
 
@@ -349,26 +379,41 @@ function buildOpenWeekBlock(wk, dailyMap) {
   const qRow = document.createElement('div');
   qRow.className = 'q-row';
 
-  const dayOptions = ['—','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const NO_Q_MSG = 'No Q sessions this week; Easy runs all week + 6–8 strides';
+  const NAY_VAL  = 'na'; // sentinel value for N/A option
+
   const q1Day = getQDay(wk.id, 'Q1');
   const q2Day = getQDay(wk.id, 'Q2');
 
-  function daySelectHTML(q, currentDay) {
+  // Detect "no Q" weeks — Q1 prescription starts with "No Q"
+  const isNoQ1 = (wk.q1_prescription || '').toLowerCase().startsWith('no q');
+  const isNoQ2 = (wk.q2_prescription || '').toLowerCase().startsWith('no q');
+
+  function daySelectHTML(q, currentDay, isNoQ) {
+    const dayOptions = [
+      { label: '—',         val: ''   },
+      { label: 'Monday',    val: '0'  },
+      { label: 'Tuesday',   val: '1'  },
+      { label: 'Wednesday', val: '2'  },
+      { label: 'Thursday',  val: '3'  },
+      { label: 'Friday',    val: '4'  },
+      { label: 'Saturday',  val: '5'  },
+      { label: 'Sunday',    val: '6'  },
+      { label: 'N/A',       val: NAY_VAL },
+    ];
     return `<select class="q-day-select" data-week-id="${wk.id}" data-q="${q}">
-      ${dayOptions.map((label, i) => {
-        const val = i === 0 ? '' : String(i - 1);
-        const sel = (currentDay !== null && currentDay === i - 1) ? 'selected'
-                  : (i === 0 && currentDay === null ? 'selected' : '');
+      ${dayOptions.map(({ label, val }) => {
+        const sel = isNoQ && val === NAY_VAL ? 'selected'
+                  : (!isNoQ && val !== NAY_VAL && currentDay !== null && String(currentDay) === val) ? 'selected'
+                  : (!isNoQ && val === '' && currentDay === null) ? 'selected'
+                  : '';
         return `<option value="${val}" ${sel}>${label}</option>`;
       }).join('')}
     </select>`;
   }
 
-  const NO_Q_MSG = 'No Q sessions this week; Easy runs all week + 6–8 strides';
-  const isNoQ = (wk.q1_prescription || '').toLowerCase().startsWith('no q');
-
-  const q1Text = isNoQ ? NO_Q_MSG : (wk.q1_prescription || '');
-  const q2Text = isNoQ ? NO_Q_MSG : (wk.q2_prescription || '');
+  const q1Text = isNoQ1 ? NO_Q_MSG : (wk.q1_prescription || '');
+  const q2Text = isNoQ2 ? NO_Q_MSG : (wk.q2_prescription || '');
 
   qRow.innerHTML = `
     <div class="q-target-cell">
@@ -379,16 +424,16 @@ function buildOpenWeekBlock(wk, dailyMap) {
         <span class="q-target-unit">miles</span>
       </div>
     </div>
-    <div class="q-cell ${isNoQ ? '' : 'editable-cell'}">
-      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q1</span><span class="q-day-lbl">→</span>${daySelectHTML('Q1', q1Day)}</div>`}
+    <div class="q-cell editable-cell">
+      <div class="q-label-row"><span class="qlbl">Q1</span><span class="q-day-lbl">→</span>${daySelectHTML('Q1', q1Day, isNoQ1)}</div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription"
-        ${isNoQ ? 'readonly style="color:var(--text-tertiary)"' : ''}
+        ${isNoQ1 ? 'style="color:var(--text-tertiary)"' : ''}
         placeholder="Q1 workout prescription…">${escHtml(q1Text)}</textarea>
     </div>
-    <div class="q-cell ${isNoQ ? '' : 'editable-cell'}">
-      ${isNoQ ? '' : `<div class="q-label-row"><span class="qlbl">Q2</span><span class="q-day-lbl">→</span>${daySelectHTML('Q2', q2Day)}</div>`}
+    <div class="q-cell editable-cell">
+      <div class="q-label-row"><span class="qlbl">Q2</span><span class="q-day-lbl">→</span>${daySelectHTML('Q2', q2Day, isNoQ2)}</div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription"
-        ${isNoQ ? 'readonly style="color:var(--text-tertiary)"' : ''}
+        ${isNoQ2 ? 'style="color:var(--text-tertiary)"' : ''}
         placeholder="Q2 workout prescription…">${escHtml(q2Text)}</textarea>
     </div>
   `;
@@ -410,12 +455,27 @@ function buildOpenWeekBlock(wk, dailyMap) {
     });
   });
 
-  // Q day assignment
+  // Q day assignment — handle N/A specially
   qRow.querySelectorAll('.q-day-select').forEach(sel => {
     sel.addEventListener('change', async () => {
-      const q = sel.dataset.q;
-      const dayVal = sel.value === '' ? null : parseInt(sel.value);
-      await assignQDay(wk.id, q, dayVal);
+      const q   = sel.dataset.q;
+      const val = sel.value;
+      const field = q === 'Q1' ? 'q1_prescription' : 'q2_prescription';
+
+      if (val === 'na') {
+        // N/A: remove Q tag, set prescription to standard no-Q message
+        await assignQDay(wk.id, q, null);
+        wk[field] = NO_Q_MSG;
+        await saveWeekMeta(wk);
+      } else {
+        // Restore editable state: clear no-Q message if it was set
+        if ((wk[field] || '').toLowerCase().startsWith('no q')) {
+          wk[field] = '';
+          await saveWeekMeta(wk);
+        }
+        const dayVal = val === '' ? null : parseInt(val);
+        await assignQDay(wk.id, q, dayVal);
+      }
       rerenderOpenWeek();
     });
   });
@@ -524,28 +584,75 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   }
   tbody.appendChild(totRow);
 
-  // ACR row
-  const acrRow = document.createElement('tr');
-  acrRow.className = 'acr-row';
-  const acrTd = document.createElement('td');
-  acrTd.className = 'rl';
-  acrTd.innerHTML = `ACR <span class="acr-info" title="Acute:Chronic Workload Ratio. Acute = sum of daily miles over the last 7 days. Chronic = average weekly miles over the last 28 days. ACR = Acute ÷ Chronic × 100%. Ideal range: 80–130%. Below 80% = underloading. Above 130% = elevated injury risk.">ⓘ</span>`;
-  acrRow.appendChild(acrTd);
+  // Load Max row
+  const loadMaxRow = document.createElement('tr');
+  loadMaxRow.className = 'acr-row';
+  const lmLabel = document.createElement('td');
+  lmLabel.className = 'rl';
+  lmLabel.innerHTML = `Load Max <span class="acr-info" title="The maximum miles you can run today and stay within the healthy training zone (≤130% of your 4-week average load).">ⓘ</span>`;
 
+  loadMaxRow.appendChild(lmLabel);
   for (let d = 0; d < 7; d++) {
     const td = document.createElement('td');
     const dateStr = isoDate(addDays(wStart, d));
-    const acr = computeACR(dateStr, dailyMap);
-    if (acr !== null) {
-      const cls = acrClass(acr);
-      td.className = `acr-cell ${cls}`;
-      td.textContent = `${Math.round(acr)}%`;
+    const chronic = computeChronicLoad(dateStr, dailyMap);
+    const lmax    = roundMi(computeLoadMax(dateStr, dailyMap));
+    const lmaxTip = `The maximum miles you can run today and stay within the healthy training zone (≤130% of your 4-week average load). Your current 4-week average is ${roundMi(chronic)} mi/week.`;
+    td.title = lmaxTip;
+    if (lmax <= 0) {
+      td.textContent = '0';
+      td.style.color = 'var(--acr-orange-text)';
+      td.style.fontWeight = '500';
     } else {
-      td.textContent = '—'; td.style.color = '#ccc';
+      td.textContent = lmax;
+      td.style.color = 'var(--text-secondary)';
     }
-    acrRow.appendChild(td);
+    loadMaxRow.appendChild(td);
   }
-  tbody.appendChild(acrRow);
+  tbody.appendChild(loadMaxRow);
+
+  // Load Overage row
+  const loadOverRow = document.createElement('tr');
+  loadOverRow.className = 'acr-row';
+  const loLabel = document.createElement('td');
+  loLabel.className = 'rl';
+  loLabel.innerHTML = `Overage <span class="acr-info" title="How far today's miles are from the healthy zone. Negative (blue) = below min load. Dash = in zone. Positive (red) = over max load.">ⓘ</span>`;
+  loadOverRow.appendChild(loLabel);
+
+  for (let d = 0; d < 7; d++) {
+    const td = document.createElement('td');
+    const dateStr   = isoDate(addDays(wStart, d));
+    const dayData   = wDays.find(x => x.day_of_week === d);
+    const todayMi   = dayData ? roundMi(dayTotal(dayData)) : 0;
+    const lmax      = roundMi(computeLoadMax(dateStr, dailyMap));
+    const lmin      = roundMi(computeLoadMin(dateStr, dailyMap));
+    const overage   = roundMi(todayMi - lmax);
+    const underage  = roundMi(todayMi - lmin);
+    const chronic   = roundMi(computeChronicLoad(dateStr, dailyMap));
+
+    if (todayMi > lmax) {
+      // Over budget
+      const tip = `You're ${overage} miles over the recommended daily max. Reducing by ${overage} miles would bring you back into the healthy training zone and reduce overuse injury risk.`;
+      td.textContent = `+${overage}`;
+      td.style.color = 'var(--acr-red-text)';
+      td.style.fontWeight = '500';
+      td.title = tip;
+    } else if (todayMi < lmin) {
+      // Under minimum
+      const deficit = roundMi(lmin - todayMi);
+      const tip = `You're ${deficit} miles below the minimum recommended load for today. Running ${deficit} more miles would bring you to the low end of the healthy training zone. Extended time below 80% load risks detraining.`;
+      td.textContent = `−${deficit}`;
+      td.style.color = 'var(--acr-blue-text)';
+      td.style.fontWeight = '500';
+      td.title = tip;
+    } else {
+      td.textContent = '—';
+      td.style.color = '#ccc';
+      td.title = `Today's planned miles are within the healthy training zone (80–130% of your recent load).`;
+    }
+    loadOverRow.appendChild(td);
+  }
+  tbody.appendChild(loadOverRow);
 
   table.appendChild(tbody);
   return table;
