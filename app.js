@@ -303,7 +303,7 @@ function buildCollapsedRow(wk, dailyMap) {
     }
   }
 
-  const locAbbrev = {'New York':'NYC','San Francisco':'SF','Travel':'Travel'}[wk.location] || wk.location;
+  const locAbbrev = {'New York':'NYC','San Francisco':'SF','Travel':'Travelling'}[wk.location] || wk.location;
   row.innerHTML = `
     <i class="ti ti-chevron-right wr-chev"></i>
     <span class="wr-num week-title">Week T-${wk.week_number}</span>
@@ -358,7 +358,7 @@ function buildOpenWeekBlock(wk, dailyMap) {
     <select class="loc-select" data-week-id="${wk.id}" title="Training location">
       <option value="New York"       ${wk.location==='New York'?'selected':''}>NYC</option>
       <option value="San Francisco"  ${wk.location==='San Francisco'?'selected':''}>SF</option>
-      <option value="Travel"         ${wk.location==='Travel'?'selected':''}>✈ Travel</option>
+      <option value="Travel"         ${wk.location==='Travel'?'selected':''}>Travelling</option>
     </select>
   `;
   hdr.querySelector('.ti-chevron-down').closest('.wbh').addEventListener('click', (e) => {
@@ -420,12 +420,12 @@ function buildOpenWeekBlock(wk, dailyMap) {
       </div>
     </div>
     <div class="q-cell editable-cell">
-      <div class="q-label-row"><span class="qlbl">Q1</span><span class="q-day-lbl">→</span>${daySelectHTML('Q1', q1Day)}</div>
+      <div class="q-label-row"><span class="qlbl">Q1</span><span class="q-day-lbl">→</span>${daySelectHTML('Q1', q1Day)}<button class="q-watch-btn" disabled title="Send workout to watch"><i class="ti ti-device-watch"></i></button></div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription"
         placeholder="Q1 workout prescription…">${escHtml(wk.q1_prescription||'')}</textarea>
     </div>
     <div class="q-cell editable-cell">
-      <div class="q-label-row"><span class="qlbl">Q2</span><span class="q-day-lbl">→</span>${daySelectHTML('Q2', q2Day)}</div>
+      <div class="q-label-row"><span class="qlbl">Q2</span><span class="q-day-lbl">→</span>${daySelectHTML('Q2', q2Day)}<button class="q-watch-btn" disabled title="Send workout to watch"><i class="ti ti-device-watch"></i></button></div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription"
         placeholder="Q2 workout prescription…">${escHtml(wk.q2_prescription||'')}</textarea>
     </div>

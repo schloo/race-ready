@@ -438,6 +438,40 @@ body {
   flex-wrap: wrap;
 }
 .q-day-lbl { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
+
+/* Send to watch button */
+.q-watch-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 2px 3px;
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  font-size: 13px;
+  opacity: 0.4;
+  position: relative;
+  line-height: 1;
+}
+.q-watch-btn::after {
+  content: attr(title);
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 10px;
+  font-family: var(--font-sans);
+  padding: 4px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  display: none;
+  pointer-events: none;
+  z-index: 200;
+}
+.q-watch-btn:hover { opacity: 0.7; }
+.q-watch-btn:hover::after { display: block; }
 .q-day-select {
   font-size: 11px;
   padding: 2px 20px 2px 6px;
