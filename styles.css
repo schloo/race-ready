@@ -118,10 +118,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 13px 20px;
   background: #fff;
   border-bottom: 0.5px solid var(--cool-border);
-  gap: 12px;
+  gap: 16px;
 }
 
 .topbar-left {
@@ -140,8 +140,8 @@ body {
 }
 
 .plan-title {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -278,11 +278,12 @@ body {
   user-select: none;
   flex-shrink: 0;
 }
-.week-row { background: #eef4fc !important; border-color: #ccddf0; }
-.week-row:hover { background: #e2eef8 !important; }
-.week-row.current { background: #d4e8f8 !important; border-color: #a8c8e8; }
+/* Collapsed rows: same gray as Total row */
+.week-row { background: #e0e6ed !important; border-color: #c8d0db; }
+.week-row:hover { background: #d4dce6 !important; }
+.week-row.current { background: #c8d4e0 !important; border-color: #a8b8c8; }
 
-.wr-chev  { color: var(--text-tertiary); font-size: 13px; flex-shrink: 0; }
+.wr-chev  { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; }
 .wr-num   { width: 76px; flex-shrink: 0; }
 .wr-dates { font-size: 11px; color: var(--text-tertiary); width: 88px; flex-shrink: 0; }
 .wr-phase { font-size: 11px; color: var(--text-secondary); width: 180px; flex-shrink: 0; }
@@ -315,7 +316,7 @@ body {
 
 /* Week block header — color tiers by timeframe */
 .wbh {
-  padding: 7px 12px;
+  padding: 6px 12px;
   background: var(--cool-bg);
   border-bottom: 0.5px solid var(--cool-border);
   display: flex;
@@ -324,16 +325,16 @@ body {
   cursor: pointer;
   user-select: none;
 }
-/* Past + future: light blue (distinct from Q1/Q2 blue #daeafc) */
+/* Past + future: same gray as collapsed rows */
 .week-block.past .wbh,
 .week-block.future .wbh {
-  background: #eef4fc;
-  border-bottom-color: #ccddf0;
+  background: #e0e6ed;
+  border-bottom-color: #c8d0db;
 }
-/* Current week: richer blue to stand out */
+/* Current week: slightly richer gray-blue */
 .week-block.current .wbh {
-  background: #d4e8f8;
-  border-bottom-color: #a8c8e8;
+  background: #c8d4e0;
+  border-bottom-color: #a8b8c8;
 }
 .wbh-num   { white-space: nowrap; }
 .wbh-sep   { color: var(--cool-border); }

@@ -348,7 +348,7 @@ function buildOpenWeekBlock(wk, dailyMap) {
   hdr.className = 'wbh';
   const PHASES = ['Foundation','Initial Quality','Transition Quality','Final Quality','Taper'];
   hdr.innerHTML = `
-    <i class="ti ti-chevron-down" style="font-size:11px;color:var(--text-tertiary);flex-shrink:0"></i>
+    <i class="ti ti-chevron-down" style="font-size:11px;color:var(--text-secondary);flex-shrink:0"></i>
     <span class="wbh-num week-title">Week T-${wk.week_number}</span>
     <span class="wbh-sep">·</span>
     <span class="wbh-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
