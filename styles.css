@@ -301,7 +301,7 @@ body {
 .wr-chev  { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
 .wr-num   { width: 76px; flex-shrink: 0; font-size: 13px; font-weight: 500; }
 .wbh-chev { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
-.wr-dates { font-size: 11px; color: var(--text-tertiary); width: 88px; flex-shrink: 0; }
+.wr-dates { font-size: 11px; color: var(--text-primary); width: 88px; flex-shrink: 0; }
 .wr-phase { font-size: 11px; color: var(--text-secondary); width: 180px; flex-shrink: 0; }
 .wr-mi    { font-size: 11px; color: var(--text-secondary); flex: 1; }
 
@@ -362,7 +362,7 @@ body {
 .week-block.current .week-body { background: #f6f7f8; }
 .wbh-num   { white-space: nowrap; width: 76px; flex-shrink: 0; font-size: 13px; font-weight: 500; }
 .wbh-sep   { display: none; }
-.wbh-dates { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; width: 88px; flex-shrink: 0; }
+.wbh-dates { font-size: 11px; color: var(--text-primary); white-space: nowrap; width: 88px; flex-shrink: 0; }
 .wbh-acr   { margin-left: auto; }
 
 .loc-select {
