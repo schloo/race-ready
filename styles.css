@@ -627,7 +627,8 @@ body {
   cursor: text;
 }
 .pace-input::placeholder { color: #ccc; }
-/* Highlight the whole cell when input is focused */
+/* Highlight cell on hover and focus */
+.cal-grid td:has(.pace-input):hover { background: #fffde7 !important; }
 .cal-grid td:has(.pace-input:focus) { background: #fffde7 !important; }
 
 /* Total row — white with thick top + bottom borders */
@@ -637,8 +638,8 @@ body {
   font-weight: 400;
   color: var(--text-primary);
   padding: 5px 3px;
-  border-top: 2.5px solid #c8cdd6 !important;
-  border-bottom: 2.5px solid #c8cdd6 !important;
+  border-top: 2.5px solid #d8dde6 !important;
+  border-bottom: 2.5px solid #d8dde6 !important;
 }
 .tot-row td.rl {
   font-size: var(--fs-sm);
