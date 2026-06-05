@@ -302,12 +302,12 @@ function buildCollapsedRow(wk, dailyMap) {
   if (peakTotal > 0) {
     const pct  = Math.round(((totalMi - peakTotal) / peakTotal) * 100);
     const sign = pct >= 0 ? '+' : '';
-    wowMiTag = `<span class="wr-wow ${wowClass(pct)}">${sign}${pct}% vs peak mi</span>`;
+    wowMiTag = `<span class="wr-wow ${wowClass(pct)}">${sign}${pct}% peak mi</span>`;
   }
   if (peakLong > 0) {
     const pct  = Math.round(((thisLong - peakLong) / peakLong) * 100);
     const sign = pct >= 0 ? '+' : '';
-    wowLrTag = `<span class="wr-wow ${wowClass(pct)}">${sign}${pct}% vs peak LR</span>`;
+    wowLrTag = `<span class="wr-wow ${wowClass(pct)}">${sign}${pct}% peak LR</span>`;
   }
 
   const locAbbrev = {'New York':'NYC','San Francisco':'SF','Travel':'Travelling'}[wk.location] || wk.location;
