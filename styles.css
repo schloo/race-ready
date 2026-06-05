@@ -498,8 +498,8 @@ body {
   border-collapse: collapse;
   table-layout: fixed;
 }
-.cal-grid colgroup col.rl-col  { width: 80px; min-width: 80px; }
-.cal-grid colgroup col.day-col { width: clamp(36px, calc((100% - 80px) / 7), 58px); }
+.cal-grid colgroup col.rl-col  { width: 110px; min-width: 110px; }
+.cal-grid colgroup col.day-col { width: clamp(32px, calc((100% - 110px) / 7), 52px); }
 
 .cal-grid th {
   font-size: var(--fs-sm);
@@ -590,8 +590,20 @@ body {
 
 /* Load rows (Load Max + Load Overage) */
 .acr-row:first-of-type td { border-top: 1.5px solid var(--cool-border); }
-.acr-row td { font-size: 11px; background: #fff !important; text-align: center; vertical-align: middle; }
+.acr-row td { font-size: 12px; background: #fff !important; text-align: center; vertical-align: middle; }
 .acr-row td.rl { background: #fff !important; font-size: var(--fs-sm); color: var(--text-secondary); font-weight: var(--fw-medium); text-align: left; }
+
+/* Overage chip styling */
+.overage-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.overage-chip.red  { background: var(--acr-red-bg);  color: var(--acr-red-text); }
+.overage-chip.blue { background: var(--acr-blue-bg); color: var(--acr-blue-text); }
 .acr-cell { font-size: 11px; font-weight: 500; background: #fff !important; }
 
 /* ACR info tooltip */

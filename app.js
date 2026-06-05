@@ -584,72 +584,47 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   }
   tbody.appendChild(totRow);
 
-  // Load Max row
+  // ACR Load Max row
   const loadMaxRow = document.createElement('tr');
   loadMaxRow.className = 'acr-row';
   const lmLabel = document.createElement('td');
   lmLabel.className = 'rl';
-  lmLabel.innerHTML = `Load Max <span class="acr-info" title="The maximum miles you can run today and stay within the healthy training zone (≤130% of your 4-week average load).">ⓘ</span>`;
-
+  lmLabel.innerHTML = `ACR Load Max <span class="acr-info" title="The maximum miles you can run today and stay in the healthy zone (≤130% of your 4-week avg load).">ⓘ</span>`;
   loadMaxRow.appendChild(lmLabel);
+
   for (let d = 0; d < 7; d++) {
     const td = document.createElement('td');
+    td.dataset.loadMax = '1';
+    td.dataset.weekId  = wk.id;
+    td.dataset.day     = d;
     const dateStr = isoDate(addDays(wStart, d));
     const chronic = computeChronicLoad(dateStr, dailyMap);
     const lmax    = roundMi(computeLoadMax(dateStr, dailyMap));
-    const lmaxTip = `The maximum miles you can run today and stay within the healthy training zone (≤130% of your 4-week average load). Your current 4-week average is ${roundMi(chronic)} mi/week.`;
-    td.title = lmaxTip;
-    if (lmax <= 0) {
-      td.textContent = '0';
-      td.style.color = 'var(--acr-orange-text)';
-      td.style.fontWeight = '500';
-    } else {
-      td.textContent = lmax;
-      td.style.color = 'var(--text-secondary)';
-    }
+    td.title = `Max safe miles today = ${lmax}. Your 4-week avg: ${roundMi(chronic)} mi/week.`;
+    renderLoadMaxCell(td, lmax);
     loadMaxRow.appendChild(td);
   }
   tbody.appendChild(loadMaxRow);
 
-  // Load Overage row
+  // ACR Load Overage row
   const loadOverRow = document.createElement('tr');
   loadOverRow.className = 'acr-row';
   const loLabel = document.createElement('td');
   loLabel.className = 'rl';
-  loLabel.innerHTML = `Overage <span class="acr-info" title="How far today's miles are from the healthy zone. Negative (blue) = below min load. Dash = in zone. Positive (red) = over max load.">ⓘ</span>`;
+  loLabel.innerHTML = `ACR Load Overage <span class="acr-info" title="How far today's miles are from the healthy zone. Blue = below min. Dash = in zone. Red = over max.">ⓘ</span>`;
   loadOverRow.appendChild(loLabel);
 
   for (let d = 0; d < 7; d++) {
     const td = document.createElement('td');
-    const dateStr   = isoDate(addDays(wStart, d));
-    const dayData   = wDays.find(x => x.day_of_week === d);
-    const todayMi   = dayData ? roundMi(dayTotal(dayData)) : 0;
-    const lmax      = roundMi(computeLoadMax(dateStr, dailyMap));
-    const lmin      = roundMi(computeLoadMin(dateStr, dailyMap));
-    const overage   = roundMi(todayMi - lmax);
-    const underage  = roundMi(todayMi - lmin);
-    const chronic   = roundMi(computeChronicLoad(dateStr, dailyMap));
-
-    if (todayMi > lmax) {
-      // Over budget
-      const tip = `You're ${overage} miles over the recommended daily max. Reducing by ${overage} miles would bring you back into the healthy training zone and reduce overuse injury risk.`;
-      td.textContent = `+${overage}`;
-      td.style.color = 'var(--acr-red-text)';
-      td.style.fontWeight = '500';
-      td.title = tip;
-    } else if (todayMi < lmin) {
-      // Under minimum
-      const deficit = roundMi(lmin - todayMi);
-      const tip = `You're ${deficit} miles below the minimum recommended load for today. Running ${deficit} more miles would bring you to the low end of the healthy training zone. Extended time below 80% load risks detraining.`;
-      td.textContent = `−${deficit}`;
-      td.style.color = 'var(--acr-blue-text)';
-      td.style.fontWeight = '500';
-      td.title = tip;
-    } else {
-      td.textContent = '—';
-      td.style.color = '#ccc';
-      td.title = `Today's planned miles are within the healthy training zone (80–130% of your recent load).`;
-    }
+    td.dataset.loadOver = '1';
+    td.dataset.weekId   = wk.id;
+    td.dataset.day      = d;
+    const dateStr = isoDate(addDays(wStart, d));
+    const dayData = wDays.find(x => x.day_of_week === d);
+    const todayMi = dayData ? roundMi(dayTotal(dayData)) : 0;
+    const lmax    = roundMi(computeLoadMax(dateStr, dailyMap));
+    const lmin    = roundMi(computeLoadMin(dateStr, dailyMap));
+    renderLoadOverCell(td, todayMi, lmax, lmin);
     loadOverRow.appendChild(td);
   }
   tbody.appendChild(loadOverRow);
@@ -817,6 +792,83 @@ async function assignQDay(weekId, q, dayOfWeek) {
 // Input handlers
 // ────────────────────────────────────────────────
 
+// ── Load row cell renderers ──────────────────────────────
+function renderLoadMaxCell(td, lmax) {
+  if (lmax <= 0) {
+    td.textContent = '0';
+    td.style.color = 'var(--acr-orange-text)';
+    td.style.fontWeight = '500';
+  } else {
+    td.textContent = lmax;
+    td.style.color = 'var(--text-secondary)';
+    td.style.fontWeight = '';
+  }
+}
+
+function renderLoadOverCell(td, todayMi, lmax, lmin) {
+  td.innerHTML = '';
+  if (todayMi > lmax) {
+    const over = roundMi(todayMi - lmax);
+    const chip = document.createElement('span');
+    chip.className = 'overage-chip red';
+    chip.textContent = `+${over}`;
+    chip.title = `You're ${over} miles over the recommended daily max. Reducing by ${over} miles would bring you back into the healthy training zone and reduce overuse injury risk.`;
+    td.appendChild(chip);
+  } else if (todayMi < lmin) {
+    const deficit = roundMi(lmin - todayMi);
+    const chip = document.createElement('span');
+    chip.className = 'overage-chip blue';
+    chip.textContent = `−${deficit}`;
+    chip.title = `You're ${deficit} miles below the minimum recommended load for today. Running ${deficit} more miles would bring you to the low end of the healthy training zone. Extended time below 80% load risks detraining.`;
+    td.appendChild(chip);
+  } else {
+    td.style.color = '#ccc';
+    td.textContent = '—';
+  }
+}
+
+// Refresh Total, Load Max, Load Overage across ALL open weeks
+// Called after any pace input changes, since ACR carries across weeks.
+function refreshAllLoadRows() {
+  const dailyMap = buildDailyTotalsMap();
+  for (const weekNum of openWeekNumbers) {
+    const wk = weeks.find(w => w.week_number === weekNum);
+    if (!wk) continue;
+    const block = document.querySelector(`.week-block[data-week-id="${wk.id}"]`);
+    if (!block) continue;
+    const wStart = weekStartDate(plan.race_date, wk.week_number);
+    const wDays  = days[wk.id] || [];
+
+    for (let d = 0; d < 7; d++) {
+      const dayData = wDays.find(x => x.day_of_week === d);
+      const dateStr = isoDate(addDays(wStart, d));
+      const todayMi = dayData ? roundMi(dayTotal(dayData)) : 0;
+
+      // Total cell
+      const totCell = block.querySelector(`.tot-val[data-week-id="${wk.id}"][data-day="${d}"]`);
+      if (totCell) {
+        totCell.textContent = todayMi || 0;
+        totCell.style.color = todayMi ? '' : '#ccc';
+      }
+
+      // Load Max cell
+      const lmCell = block.querySelector(`[data-load-max][data-week-id="${wk.id}"][data-day="${d}"]`);
+      if (lmCell) {
+        const lmax = roundMi(computeLoadMax(dateStr, dailyMap));
+        renderLoadMaxCell(lmCell, lmax);
+      }
+
+      // Load Overage cell
+      const loCell = block.querySelector(`[data-load-over][data-week-id="${wk.id}"][data-day="${d}"]`);
+      if (loCell) {
+        const lmax = roundMi(computeLoadMax(dateStr, dailyMap));
+        const lmin = roundMi(computeLoadMin(dateStr, dailyMap));
+        renderLoadOverCell(loCell, todayMi, lmax, lmin);
+      }
+    }
+  }
+}
+
 function onPaceInputChange(e) {
   const inp = e.target;
   const weekId = inp.dataset.weekId;
@@ -828,13 +880,8 @@ function onPaceInputChange(e) {
   const day = days[weekId].find(d => d.day_of_week === dayOfWeek);
   day[field] = val;
 
-  // Update total cell live
-  const totCell = document.querySelector(
-    `.tot-val[data-week-id="${weekId}"][data-day="${dayOfWeek}"]`
-  );
-  if (totCell) {
-    totCell.textContent = roundMi(dayTotal(day)) || 0;
-  }
+  // Refresh totals + load rows for all open weeks (ACR carries cross-week)
+  refreshAllLoadRows();
 
   // Update summary pane
   const sumPane = document.getElementById(`summary-${weekId}`);
