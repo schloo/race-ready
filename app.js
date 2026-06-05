@@ -589,7 +589,7 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   loadMaxRow.className = 'acr-row';
   const lmLabel = document.createElement('td');
   lmLabel.className = 'rl';
-  lmLabel.innerHTML = `ACR Load Max <span class="acr-info" title="The maximum miles you can run today and stay in the healthy zone (≤130% of your 4-week avg load).">ⓘ</span>`;
+  lmLabel.innerHTML = `<span class="tip-text" data-tip="The maximum miles you can run today and stay in the healthy zone (≤130% of your 4-week avg load).">Safe Maximum</span>`;
   loadMaxRow.appendChild(lmLabel);
 
   for (let d = 0; d < 7; d++) {
@@ -611,7 +611,7 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   loadOverRow.className = 'acr-row';
   const loLabel = document.createElement('td');
   loLabel.className = 'rl';
-  loLabel.innerHTML = `ACR Load Overage <span class="acr-info" title="How far today's miles are from the healthy zone. Blue = below min. Dash = in zone. Red = over max.">ⓘ</span>`;
+  loLabel.innerHTML = `<span class="tip-text" data-tip="How far today's miles are from the healthy zone. Blue chip = below minimum. Dash = in zone. Red chip = over maximum.">ACR Load Overage</span>`;
   loadOverRow.appendChild(loLabel);
 
   for (let d = 0; d < 7; d++) {
