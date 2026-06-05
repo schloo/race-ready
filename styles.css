@@ -278,8 +278,9 @@ body {
   user-select: none;
   flex-shrink: 0;
 }
-.week-row:hover { background: var(--cool-bg); }
-.week-row.past { opacity: 0.5; }
+.week-row { background: #eef4fc !important; border-color: #ccddf0; }
+.week-row:hover { background: #e2eef8 !important; }
+.week-row.current { background: #d4e8f8 !important; border-color: #a8c8e8; }
 
 .wr-chev  { color: var(--text-tertiary); font-size: 13px; flex-shrink: 0; }
 .wr-num   { width: 76px; flex-shrink: 0; }
@@ -323,20 +324,16 @@ body {
   cursor: pointer;
   user-select: none;
 }
-/* Past weeks: muted warm tint */
-.week-block.past .wbh {
-  background: #fdf8f0;
-  border-bottom-color: #e8ddd0;
-}
-/* Current week: richer warm amber to stand out */
-.week-block.current .wbh {
-  background: #fff3d6;
-  border-bottom-color: #e8c84a;
-}
-/* Future weeks: slightly cool blue-white */
+/* Past + future: light blue (distinct from Q1/Q2 blue #daeafc) */
+.week-block.past .wbh,
 .week-block.future .wbh {
-  background: #f0f4fb;
-  border-bottom-color: #d4dcee;
+  background: #eef4fc;
+  border-bottom-color: #ccddf0;
+}
+/* Current week: richer blue to stand out */
+.week-block.current .wbh {
+  background: #d4e8f8;
+  border-bottom-color: #a8c8e8;
 }
 .wbh-num   { white-space: nowrap; }
 .wbh-sep   { color: var(--cool-border); }
@@ -579,29 +576,27 @@ body {
 .cal-grid td:has(.pace-input:focus) { background: #fffde7 !important; }
 
 /* Total row */
-/* Separator before Total + ACR rows */
 .tot-row td { border-top: 2px solid var(--cool-border) !important; }
 .tot-row td {
-  background: #eaf4ea !important;
+  background: #e0e6ed !important;
   font-size: 12px;
   font-weight: 400;
-  color: var(--text-secondary);
-  padding: 5px 3px;   /* match pace row height */
+  color: var(--text-primary);
+  padding: 5px 3px;
 }
 .tot-row td.rl {
   font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  font-weight: var(--fw-medium);
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
   padding: 5px 6px;
-  /* inherits .tot-row td background #eef2f8 */
 }
 .tot-row td.tot-val { font-weight: 500; color: var(--text-primary); }
 
-/* Load rows (Safe Maximum + Load Overage) */
-.acr-row:first-of-type td { border-top: 6px solid var(--cool-bg) !important; } /* extra gap after Total */
+/* Load rows (Safe Maximum + Overage) */
+.acr-row:first-of-type td { border-top: 6px solid var(--cool-bg) !important; }
 .acr-row + .acr-row td   { border-top: 0.5px solid var(--cool-border); }
 .acr-row td { font-size: 12px; background: #fff !important; text-align: center; vertical-align: middle; padding: 5px 3px; }
-.acr-row td.rl { background: #fff !important; font-size: var(--fs-sm); color: var(--text-secondary); font-weight: var(--fw-medium); text-align: left; padding: 5px 6px; }
+.acr-row td.rl { background: #fff !important; font-size: var(--fs-sm); color: var(--text-primary); font-weight: var(--fw-semibold); text-align: left; padding: 5px 6px; }
 
 /* Overage chip styling */
 .overage-chip {

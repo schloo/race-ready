@@ -272,9 +272,10 @@ function buildCollapsedRow(wk, dailyMap) {
   const row = document.createElement('div');
   const wStart = weekStartDate(plan.race_date, wk.week_number);
   const today = new Date();
-  const isPast = addDays(wStart, 6) < today;
+  const wEnd   = addDays(wStart, 6);
+  const timeClass = wEnd < today ? 'past' : (wStart <= today && wEnd >= today) ? 'current' : 'future';
 
-  row.className = 'week-row' + (isPast ? ' past' : '');
+  row.className = `week-row ${timeClass}`;
 
   const wDays = days[wk.id] || [];
   const totalMi = roundMi(weekTotal(wk.id));
@@ -592,7 +593,7 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   for (let d = 0; d < 7; d++) {
     const dayData = wDays.find(x => x.day_of_week === d);
     const tot = dayData ? roundMi(dayTotal(dayData)) : 0;
-    totRow.innerHTML += `<td class="tot-val" data-week-id="${wk.id}" data-day="${d}" style="${tot ? '' : 'color:#ccc'}">${tot || 0}</td>`;
+    totRow.innerHTML += `<td class="tot-val" data-week-id="${wk.id}" data-day="${d}" style="${tot ? '' : 'color:#aaa'}">${tot || '—'}</td>`;
   }
   tbody.appendChild(totRow);
 
@@ -813,8 +814,8 @@ function renderLoadMaxCell(td, lmax) {
     td.style.fontWeight = '500';
   } else {
     td.textContent = lmax;
-    td.style.color = 'var(--text-secondary)';
-    td.style.fontWeight = '';
+    td.style.color = 'var(--text-primary)';
+    td.style.fontWeight = '500';
   }
 }
 
@@ -877,7 +878,8 @@ function refreshAllLoadRows() {
       // Total cell
       const totCell = block.querySelector(`.tot-val[data-week-id="${wk.id}"][data-day="${d}"]`);
       if (totCell) {
-        totCell.textContent = todayMi || 0;
+        totCell.textContent = todayMi || '—';
+        totCell.style.color = todayMi ? '' : '#aaa';
         totCell.style.color = todayMi ? '' : '#ccc';
       }
 
