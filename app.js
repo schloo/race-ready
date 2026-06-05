@@ -1063,15 +1063,30 @@ function renderMobile() {
     const row = document.createElement('div');
     row.className = 'm-day-row' + (isToday(date) ? ' today' : '');
 
-    // ACR
-    let acrHTML = '';
-    if (hasMiles) {
-      const acr = computeACR(isoDate(date), dailyMap);
-      if (acr !== null) {
-        const cls = acrClass(acr);
-        acrHTML = `<span class="m-day-acr ${cls}">ACR ${Math.round(acr)}%</span>`;
-      }
+    // Safe Maximum + Overage (replaces old ACR chip)
+    const dateStr   = isoDate(date);
+    const todayMi   = roundMi(dayTotal(dayData));
+    const lmax      = roundMi(computeLoadMax(dateStr, dailyMap));
+    const lmax150   = roundMi(computeLoadMax150(dateStr, dailyMap));
+    const lmin      = roundMi(computeLoadMin(dateStr, dailyMap));
+
+    // Build overage chip HTML inline
+    let overageChipHTML = '';
+    if (todayMi > lmax150) {
+      const over = roundMi(todayMi - lmax150);
+      overageChipHTML = `<span class="overage-chip red" title="High injury risk: ${over} mi over the 150% threshold">+${over}</span>`;
+    } else if (todayMi > lmax) {
+      const over = roundMi(todayMi - lmax);
+      overageChipHTML = `<span class="overage-chip orange" title="Caution: ${over} mi over the 130% safe-load threshold">+${over}</span>`;
+    } else if (todayMi < lmin) {
+      const deficit = roundMi(lmin - todayMi);
+      overageChipHTML = `<span class="overage-chip blue" title="Under minimum load by ${deficit} mi">−${deficit}</span>`;
+    } else {
+      const headroom = roundMi(lmax - todayMi);
+      overageChipHTML = `<span class="overage-chip neutral">${headroom > 0 ? '−' + headroom : '0'}</span>`;
     }
+
+    const safeMaxHTML = `<span class="m-safe-max">max ${lmax} mi</span>`;
 
     // Q hint and tag chip (read-only — assigned via week Q row)
     const hasQ1 = tags.includes('Q1');
@@ -1097,7 +1112,7 @@ function renderMobile() {
           <span class="m-day-name">${DAY_NAMES[d]}</span>
           <span class="m-day-date">${fmtDate(date,{month:'short',day:'numeric'})}</span>
         </div>
-        ${acrHTML}
+        <div class="m-day-chips">${safeMaxHTML}${overageChipHTML}</div>
       </div>`;
     row.querySelector('.m-day-left').appendChild(tagsEl);
     if (qHint) {

@@ -1159,12 +1159,9 @@ body {
   .m-day-name { font-size: 12px; font-weight: 500; }
   .m-day-date { font-size: 11px; color: var(--text-tertiary); }
   .m-day-tags { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
-  .m-day-acr  { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
-  .m-day-acr.green  { background: var(--acr-green-bg);  color: var(--acr-green-text); }
-  .m-day-acr.orange { background: var(--acr-orange-bg); color: var(--acr-orange-text); }
-  .m-day-acr.red    { background: var(--acr-red-bg);    color: var(--acr-red-text); }
-  .m-day-acr.blue   { background: var(--acr-blue-bg);   color: var(--acr-blue-text); }
-  .m-day-acr.purple { background: var(--acr-purple-bg); color: var(--acr-purple-text); }
+  /* Mobile day: safe max label + overage chip */
+  .m-day-chips { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .m-safe-max  { font-size: 10px; color: var(--text-tertiary); white-space: nowrap; }
 
   /* Mobile tag tap-to-remove */
   .m-tag-x { display: none; font-size: 10px; margin-left: 1px; }
