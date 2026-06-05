@@ -352,6 +352,10 @@ body {
   background: #c8ddf2;
   border-bottom-color: #a0c0de;
 }
+/* Hover states */
+.week-block.past .wbh:hover,
+.week-block.future .wbh:hover { background: #e8ecf2; }
+.week-block.current .wbh:hover { background: #b4d0ec; }
 .wbh-num   { white-space: nowrap; width: 76px; flex-shrink: 0; font-size: 13px; font-weight: 500; }
 .wbh-sep   { display: none; }
 .wbh-dates { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; width: 88px; flex-shrink: 0; }
@@ -633,8 +637,8 @@ body {
   font-weight: 400;
   color: var(--text-primary);
   padding: 5px 3px;
-  border-top: 2.5px solid #b0bec8 !important;
-  border-bottom: 2.5px solid #b0bec8 !important;
+  border-top: 2.5px solid #c8cdd6 !important;
+  border-bottom: 2.5px solid #c8cdd6 !important;
 }
 .tot-row td.rl {
   font-size: var(--fs-sm);
