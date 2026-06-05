@@ -133,10 +133,15 @@ body {
 
 .title-stack {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 1px;
   flex-shrink: 0;
-  flex-wrap: wrap;
+}
+
+.plan-title-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .plan-title {
@@ -145,23 +150,28 @@ body {
   color: var(--text-primary);
 }
 
-.title-sep { color: var(--cool-border); font-size: 13px; }
+.plan-title-row .edit-icon {
+  color: var(--text-tertiary);
+  opacity: 0.5;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 1px;
+}
+.plan-title-row .edit-icon:hover { opacity: 1; }
+
+/* Remove unused inline separator */
+.title-sep { display: none; }
 
 .plan-subtitle {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
   font-size: 11px;
   color: var(--text-secondary);
 }
 
-.plan-subtitle .edit-icon {
-  color: var(--text-tertiary);
-  opacity: 0.5;
-  cursor: pointer;
-  font-size: 13px;
-}
-.plan-subtitle .edit-icon:hover { opacity: 1; }
+/* Old inline edit-icon (subtitle) — hidden now */
+.plan-subtitle .edit-icon { display: none; }
 
 /* Pace chip group */
 .pace-chip-group-wrap {
@@ -268,7 +278,7 @@ body {
 /* ── Collapsed week row ── */
 .week-row {
   border: 0.5px solid var(--cool-border);
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 6px 12px;
   display: flex;
   align-items: center;
@@ -278,10 +288,9 @@ body {
   user-select: none;
   flex-shrink: 0;
 }
-/* Collapsed rows: same gray as Total row */
-.week-row { background: #e0e6ed !important; border-color: #c8d0db; }
-.week-row:hover { background: #d4dce6 !important; }
-.week-row.current { background: #c8d4e0 !important; border-color: #a8b8c8; }
+.week-row { background: var(--cool-bg) !important; border-color: var(--cool-border); }
+.week-row:hover { background: #e8ecf2 !important; }
+.week-row.current { background: #e4ecf4 !important; border-color: #c8d4e0; }
 
 .wr-chev  { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; }
 .wr-num   { width: 76px; flex-shrink: 0; }
@@ -308,7 +317,7 @@ body {
 /* ── Open week block ── */
 .week-block {
   border: 0.5px solid var(--cool-border);
-  border-radius: 12px;
+  border-radius: 6px;
   overflow: hidden;
   background: #fff;
   flex-shrink: 0;
@@ -325,16 +334,16 @@ body {
   cursor: pointer;
   user-select: none;
 }
-/* Past + future: same gray as collapsed rows */
+/* Past + future: original light gray */
 .week-block.past .wbh,
 .week-block.future .wbh {
-  background: #e0e6ed;
-  border-bottom-color: #c8d0db;
+  background: var(--cool-bg);
+  border-bottom-color: var(--cool-border);
 }
-/* Current week: slightly richer gray-blue */
+/* Current week: slightly richer */
 .week-block.current .wbh {
-  background: #c8d4e0;
-  border-bottom-color: #a8b8c8;
+  background: #e4ecf4;
+  border-bottom-color: #c8d4e0;
 }
 .wbh-num   { white-space: nowrap; }
 .wbh-sep   { color: var(--cool-border); }
@@ -383,7 +392,7 @@ body {
   background: transparent;
   padding: 0;
   width: 36px;
-  text-align: right;
+  text-align: center;
   line-height: 1.1;
   -moz-appearance: textfield;
   transition: border-color 0.15s;
