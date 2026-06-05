@@ -24,10 +24,11 @@
       </div>
     </div>
   </div>
-  <!-- Desktop pace chip group — centered -->
-  <div class="topbar-center">
+  <div class="topbar-center"></div>
+  <div class="topbar-right">
+    <!-- Desktop pace chip group — right-anchored -->
     <div class="pace-chip-group-wrap">
-      <span class="pace-chip-group-lbl">Paces</span>
+      <span class="pace-chip-group-lbl">Pace Reference</span>
       <div class="pace-chip-group" id="pace-chip-group" title="Edit paces">
         <span class="pace-chip E" data-pace="E" id="chip-E">E —</span>
         <span class="pace-chip M" data-pace="M" id="chip-M">M —</span>
@@ -37,8 +38,6 @@
         <span class="pace-edit-btn" id="open-pace-editor"><i class="ti ti-pencil"></i></span>
       </div>
     </div>
-  </div>
-  <div class="topbar-right">
     <button class="ramp-btn" id="open-ramp">
       <svg width="16" height="14" viewBox="0 0 20 16" fill="none">
         <line x1="3" y1="1" x2="3" y2="13" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
@@ -184,7 +183,7 @@
       <div class="pop-error" id="ramp-error"></div>
       <div class="pop-action-row">
         <button class="pop-btn" id="ramp-generate" disabled style="opacity:0.4;cursor:not-allowed">
-          <i class="ti ti-wand" style="font-size:12px"></i> Generate weekly targets ↗
+          Generate weekly targets <i class="ti ti-wand" style="font-size:12px"></i>
         </button>
         <span class="pop-btn-note">overwrites selected range only</span>
       </div>
@@ -271,7 +270,7 @@
       <div class="pop-field"><div class="pop-label">Apply from</div><select class="pop-select" id="m-ramp-apply-from"></select></div>
       <div class="pop-error" id="m-ramp-error"></div>
       <button class="pop-btn" id="m-ramp-generate" style="justify-content:center;width:100%">
-        <i class="ti ti-wand" style="font-size:12px"></i> Generate weekly targets ↗
+        Generate weekly targets <i class="ti ti-wand" style="font-size:12px"></i>
       </button>
     </div>
   </div>

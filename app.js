@@ -348,7 +348,7 @@ function buildOpenWeekBlock(wk, dailyMap) {
   hdr.className = 'wbh';
   const PHASES = ['Foundation','Initial Quality','Transition Quality','Final Quality','Taper'];
   hdr.innerHTML = `
-    <i class="ti ti-chevron-down" style="font-size:11px;color:var(--text-secondary);flex-shrink:0"></i>
+    <i class="ti ti-chevron-down wbh-chev" style="font-size:11px"></i>
     <span class="wbh-num week-title">Week T-${wk.week_number}</span>
     <span class="wbh-sep">·</span>
     <span class="wbh-dates">${weekDateRange(plan.race_date, wk.week_number)}</span>
@@ -1523,8 +1523,13 @@ async function initFromSupabase() {
 function openPopover(name) {
   document.getElementById(`${name}-backdrop`).classList.add('open');
 }
+function togglePopover(name) {
+  const bd = document.getElementById(`${name}-backdrop`);
+  bd.classList.toggle('open');
+}
 function closePopover(name) {
-  document.getElementById(`${name}-backdrop`).classList.remove('open');
+  const bd = document.getElementById(`${name}-backdrop`);
+  if (bd) bd.classList.remove('open');
 }
 
 function openSheet(name) {
@@ -1606,16 +1611,16 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Popovers open
   document.getElementById('open-plan-settings').addEventListener('click', () => {
     if (window.innerWidth <= 640) { syncSheetFromPlan(); openSheet('plan-settings'); }
-    else { syncPopoverFromPlan(); openPopover('plan-settings'); }
+    else { syncPopoverFromPlan(); togglePopover('plan-settings'); }
   });
   document.getElementById('open-ramp').addEventListener('click', () => {
     if (window.innerWidth <= 640) { openSheet('ramp'); }
-    else { syncRampDropdown(); openPopover('ramp'); }
+    else { syncRampDropdown(); togglePopover('ramp'); }
   });
-  document.getElementById('open-pace-editor').addEventListener('click', () => openPopover('pace-editor'));
+  document.getElementById('open-pace-editor').addEventListener('click', () => togglePopover('pace-editor'));
   document.getElementById('pace-chip-group').addEventListener('click', (e) => {
     if (!e.target.classList.contains('pace-edit-btn') && !e.target.closest('.pace-edit-btn')) return;
-    openPopover('pace-editor');
+    togglePopover('pace-editor');
   });
   document.getElementById('open-api-key').addEventListener('click', () => {
     document.getElementById('apikey-input').value = localStorage.getItem('anthropic_api_key') || '';
@@ -1731,10 +1736,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('ramp-apply-from').value;
   });
 
-  // Sync ramp dropdown when mobile sheet opens
-  document.getElementById('open-ramp').addEventListener('click', () => {
-    syncRampDropdown();
-  }, true); // capture phase so it runs before the existing handler
+  // (ramp dropdown sync is handled in the main open-ramp handler above)
 
   // Ramp generate buttons
   document.getElementById('ramp-generate').addEventListener('click', () => generateRamp('ramp'));

@@ -130,11 +130,8 @@ body {
   min-width: 0;
 }
 
-.topbar-center {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-}
+/* Pace chips floated right — move out of center to right group */
+.topbar-center { display: none; }
 
 .title-stack {
   display: flex;
@@ -267,6 +264,7 @@ body {
   cursor: pointer;
   font-size: 11px;
   font-family: var(--font-sans);
+  white-space: nowrap;
 }
 .ramp-btn:hover { background: var(--cool-bg); }
 
@@ -299,8 +297,9 @@ body {
 .week-row:hover { background: #e8ecf2 !important; }
 .week-row.current { background: #e4ecf4 !important; border-color: #c8d4e0; }
 
-.wr-chev  { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; }
+.wr-chev  { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
 .wr-num   { width: 76px; flex-shrink: 0; }
+.wbh-chev { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
 .wr-dates { font-size: 11px; color: var(--text-tertiary); width: 88px; flex-shrink: 0; }
 .wr-phase { font-size: 11px; color: var(--text-secondary); width: 180px; flex-shrink: 0; }
 .wr-mi    { font-size: 11px; color: var(--text-secondary); flex: 1; }
@@ -353,9 +352,9 @@ body {
   background: #e4ecf4;
   border-bottom-color: #c8d4e0;
 }
-.wbh-num   { white-space: nowrap; }
-.wbh-sep   { color: var(--cool-border); }
-.wbh-dates { font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+.wbh-num   { white-space: nowrap; width: 76px; flex-shrink: 0; font-size: 13px; font-weight: 500; }
+.wbh-sep   { display: none; }
+.wbh-dates { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; width: 88px; flex-shrink: 0; }
 .wbh-acr   { margin-left: auto; }
 
 .loc-select {
