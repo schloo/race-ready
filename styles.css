@@ -295,7 +295,7 @@ body {
 }
 .week-row { background: var(--cool-bg) !important; border-color: var(--cool-border); }
 .week-row:hover { background: #e8ecf2 !important; }
-.week-row.current { background: #e4ecf4 !important; border-color: #c8d4e0; }
+.week-row.current { background: #c8ddf2 !important; border-color: #a0c0de; }
 
 .wr-chev  { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
 .wr-num   { width: 76px; flex-shrink: 0; font-size: 13px; font-weight: 500; }
@@ -347,10 +347,10 @@ body {
   background: var(--cool-bg);
   border-bottom-color: var(--cool-border);
 }
-/* Current week: slightly richer */
+/* Current week: brighter blue-gray */
 .week-block.current .wbh {
-  background: #e4ecf4;
-  border-bottom-color: #c8d4e0;
+  background: #c8ddf2;
+  border-bottom-color: #a0c0de;
 }
 .wbh-num   { white-space: nowrap; width: 76px; flex-shrink: 0; font-size: 13px; font-weight: 500; }
 .wbh-sep   { display: none; }
@@ -626,14 +626,15 @@ body {
 /* Highlight the whole cell when input is focused */
 .cal-grid td:has(.pace-input:focus) { background: #fffde7 !important; }
 
-/* Total row */
-.tot-row td { border-top: 2px solid var(--cool-border) !important; }
+/* Total row — white with thick top + bottom borders */
 .tot-row td {
-  background: #e4ecf4 !important;
+  background: #fff !important;
   font-size: 12px;
   font-weight: 400;
   color: var(--text-primary);
   padding: 5px 3px;
+  border-top: 2.5px solid #b0bec8 !important;
+  border-bottom: 2.5px solid #b0bec8 !important;
 }
 .tot-row td.rl {
   font-size: var(--fs-sm);
