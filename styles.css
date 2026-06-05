@@ -97,7 +97,7 @@ input[type="number"] { -moz-appearance: textfield; }
   background: var(--q-bg);
   color: var(--q-text);
 }
-.qlbl { margin-bottom: 4px; }
+.qlbl { margin-bottom: 0; align-self: center; }
 .day-q-chip { margin-top: 2px; }
 
 /* ── Base ── */
@@ -298,7 +298,7 @@ body {
 .week-row.current { background: #e4ecf4 !important; border-color: #c8d4e0; }
 
 .wr-chev  { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
-.wr-num   { width: 76px; flex-shrink: 0; }
+.wr-num   { width: 76px; flex-shrink: 0; font-size: 13px; font-weight: 500; }
 .wbh-chev { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
 .wr-dates { font-size: 11px; color: var(--text-tertiary); width: 88px; flex-shrink: 0; }
 .wr-phase { font-size: 11px; color: var(--text-secondary); width: 180px; flex-shrink: 0; }
