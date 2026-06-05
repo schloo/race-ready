@@ -165,6 +165,20 @@ function acrClass(acr) {
   return 'red';
 }
 
+// Prior baseline: max total and max long run across all weeks older than wk.week_number
+function priorPeaks(wk) {
+  const priorWeeks = weeks.filter(w => w.week_number > wk.week_number);
+  let peakTotal = 0, peakLong = 0;
+  for (const pw of priorWeeks) {
+    const wDays = days[pw.id] || [];
+    const tot  = wDays.reduce((s, d) => s + dayTotal(d), 0);
+    const long = Math.max(0, ...wDays.map(d => dayTotal(d)));
+    if (tot  > peakTotal) peakTotal = tot;
+    if (long > peakLong)  peakLong  = long;
+  }
+  return { peakTotal, peakLong };
+}
+
 // WoW color
 function wowClass(pct) {
   if (pct === null || pct === undefined) return 'neutral';
@@ -281,26 +295,19 @@ function buildCollapsedRow(wk, dailyMap) {
   const totalMi = roundMi(weekTotal(wk.id));
   const miStr = totalMi > 0 ? `${totalMi} mi planned` : (wk.target_miles > 0 ? `${wk.target_miles} mi target` : '—');
 
-  // WoW mileage + long run vs prior week
-  const prevWk = weeks.find(w => w.week_number === wk.week_number + 1);
+  // WoW mileage + long run vs prior peak (max of all older weeks)
   let wowMiTag = '', wowLrTag = '';
-  if (prevWk) {
-    const prevDays = days[prevWk.id] || [];
-    const prevTotal = prevDays.reduce((s, d) => s + dayTotal(d), 0);
-    const thisLong  = Math.max(0, ...wDays.map(d => dayTotal(d)));
-    const prevLong  = Math.max(0, ...prevDays.map(d => dayTotal(d)));
-    if (prevTotal > 0) {
-      const pct = Math.round(((totalMi - prevTotal) / prevTotal) * 100);
-      const sign = pct >= 0 ? '+' : '';
-      const cls  = wowClass(pct);
-      wowMiTag = `<span class="wr-wow ${cls}">${sign}${pct}% weekly mi</span>`;
-    }
-    if (prevLong > 0) {
-      const pct = Math.round(((thisLong - prevLong) / prevLong) * 100);
-      const sign = pct >= 0 ? '+' : '';
-      const cls  = wowClass(pct);
-      wowLrTag = `<span class="wr-wow ${cls}">${sign}${pct}% LR</span>`;
-    }
+  const { peakTotal, peakLong } = priorPeaks(wk);
+  const thisLong = Math.max(0, ...wDays.map(d => dayTotal(d)));
+  if (peakTotal > 0) {
+    const pct  = Math.round(((totalMi - peakTotal) / peakTotal) * 100);
+    const sign = pct >= 0 ? '+' : '';
+    wowMiTag = `<span class="wr-wow ${wowClass(pct)}">${sign}${pct}% weekly mi</span>`;
+  }
+  if (peakLong > 0) {
+    const pct  = Math.round(((thisLong - peakLong) / peakLong) * 100);
+    const sign = pct >= 0 ? '+' : '';
+    wowLrTag = `<span class="wr-wow ${wowClass(pct)}">${sign}${pct}% LR</span>`;
   }
 
   const locAbbrev = {'New York':'NYC','San Francisco':'SF','Travel':'Travelling'}[wk.location] || wk.location;
@@ -709,18 +716,12 @@ function buildSummaryPane(wk, wDays) {
     ? `${roundMi(total)} mi planned`
     : `${roundMi(total)} of ${wk.target_miles} mi target`;
 
-  // WoW miles
-  const prevWk = weeks.find(w => w.week_number === wk.week_number + 1);
+  // WoW miles vs peak of all prior weeks
   let wowMiles = null, wowLong = null;
-  if (prevWk) {
-    const prevDays = days[prevWk.id] || [];
-    const prevTotal = prevDays.reduce((s, d) => s + dayTotal(d), 0);
-    if (prevTotal > 0) wowMiles = ((total - prevTotal) / prevTotal) * 100;
-
-    const thisLong = Math.max(0, ...wDays.map(d => dayTotal(d)));
-    const prevLong = Math.max(0, ...prevDays.map(d => dayTotal(d)));
-    if (prevLong > 0) wowLong = ((thisLong - prevLong) / prevLong) * 100;
-  }
+  const { peakTotal: peakT, peakLong: peakL } = priorPeaks(wk);
+  if (peakT > 0) wowMiles = ((total - peakT) / peakT) * 100;
+  const thisLong = Math.max(0, ...wDays.map(d => dayTotal(d)));
+  if (peakL > 0) wowLong = ((thisLong - peakL) / peakL) * 100;
 
   const wowMilesCls = wowClass(wowMiles);
   const wowLongCls  = wowClass(wowLong);
