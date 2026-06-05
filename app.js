@@ -379,41 +379,30 @@ function buildOpenWeekBlock(wk, dailyMap) {
   const qRow = document.createElement('div');
   qRow.className = 'q-row';
 
-  const NO_Q_MSG = 'No Q sessions this week; Easy runs all week + 6–8 strides';
-  const NAY_VAL  = 'na'; // sentinel value for N/A option
-
+  const NAY_VAL = 'na';
   const q1Day = getQDay(wk.id, 'Q1');
   const q2Day = getQDay(wk.id, 'Q2');
 
-  // Detect "no Q" weeks — Q1 prescription starts with "No Q"
-  const isNoQ1 = (wk.q1_prescription || '').toLowerCase().startsWith('no q');
-  const isNoQ2 = (wk.q2_prescription || '').toLowerCase().startsWith('no q');
-
-  function daySelectHTML(q, currentDay, isNoQ) {
-    const dayOptions = [
-      { label: '—',         val: ''   },
-      { label: 'Monday',    val: '0'  },
-      { label: 'Tuesday',   val: '1'  },
-      { label: 'Wednesday', val: '2'  },
-      { label: 'Thursday',  val: '3'  },
-      { label: 'Friday',    val: '4'  },
-      { label: 'Saturday',  val: '5'  },
-      { label: 'Sunday',    val: '6'  },
-      { label: 'N/A',       val: NAY_VAL },
+  function daySelectHTML(q, currentDay) {
+    const opts = [
+      { label: '—',         val: ''        },
+      { label: 'Monday',    val: '0'       },
+      { label: 'Tuesday',   val: '1'       },
+      { label: 'Wednesday', val: '2'       },
+      { label: 'Thursday',  val: '3'       },
+      { label: 'Friday',    val: '4'       },
+      { label: 'Saturday',  val: '5'       },
+      { label: 'Sunday',    val: '6'       },
+      { label: 'N/A',       val: NAY_VAL   },
     ];
     return `<select class="q-day-select" data-week-id="${wk.id}" data-q="${q}">
-      ${dayOptions.map(({ label, val }) => {
-        const sel = isNoQ && val === NAY_VAL ? 'selected'
-                  : (!isNoQ && val !== NAY_VAL && currentDay !== null && String(currentDay) === val) ? 'selected'
-                  : (!isNoQ && val === '' && currentDay === null) ? 'selected'
-                  : '';
+      ${opts.map(({ label, val }) => {
+        const sel = currentDay !== null && String(currentDay) === val ? 'selected'
+                  : currentDay === null && val === '' ? 'selected' : '';
         return `<option value="${val}" ${sel}>${label}</option>`;
       }).join('')}
     </select>`;
   }
-
-  const q1Text = isNoQ1 ? NO_Q_MSG : (wk.q1_prescription || '');
-  const q2Text = isNoQ2 ? NO_Q_MSG : (wk.q2_prescription || '');
 
   qRow.innerHTML = `
     <div class="q-target-cell">
@@ -425,16 +414,14 @@ function buildOpenWeekBlock(wk, dailyMap) {
       </div>
     </div>
     <div class="q-cell editable-cell">
-      <div class="q-label-row"><span class="qlbl">Q1</span><span class="q-day-lbl">→</span>${daySelectHTML('Q1', q1Day, isNoQ1)}</div>
+      <div class="q-label-row"><span class="qlbl">Q1</span><span class="q-day-lbl">→</span>${daySelectHTML('Q1', q1Day)}</div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q1_prescription"
-        ${isNoQ1 ? 'style="color:var(--text-tertiary)"' : ''}
-        placeholder="Q1 workout prescription…">${escHtml(q1Text)}</textarea>
+        placeholder="Q1 workout prescription…">${escHtml(wk.q1_prescription||'')}</textarea>
     </div>
     <div class="q-cell editable-cell">
-      <div class="q-label-row"><span class="qlbl">Q2</span><span class="q-day-lbl">→</span>${daySelectHTML('Q2', q2Day, isNoQ2)}</div>
+      <div class="q-label-row"><span class="qlbl">Q2</span><span class="q-day-lbl">→</span>${daySelectHTML('Q2', q2Day)}</div>
       <textarea class="q-prescription" data-week-id="${wk.id}" data-field="q2_prescription"
-        ${isNoQ2 ? 'style="color:var(--text-tertiary)"' : ''}
-        placeholder="Q2 workout prescription…">${escHtml(q2Text)}</textarea>
+        placeholder="Q2 workout prescription…">${escHtml(wk.q2_prescription||'')}</textarea>
     </div>
   `;
 
@@ -455,27 +442,13 @@ function buildOpenWeekBlock(wk, dailyMap) {
     });
   });
 
-  // Q day assignment — handle N/A specially
+  // Q day assignment — N/A just unassigns; prescription is never touched
   qRow.querySelectorAll('.q-day-select').forEach(sel => {
     sel.addEventListener('change', async () => {
       const q   = sel.dataset.q;
       const val = sel.value;
-      const field = q === 'Q1' ? 'q1_prescription' : 'q2_prescription';
-
-      if (val === 'na') {
-        // N/A: remove Q tag, set prescription to standard no-Q message
-        await assignQDay(wk.id, q, null);
-        wk[field] = NO_Q_MSG;
-        await saveWeekMeta(wk);
-      } else {
-        // Restore editable state: clear no-Q message if it was set
-        if ((wk[field] || '').toLowerCase().startsWith('no q')) {
-          wk[field] = '';
-          await saveWeekMeta(wk);
-        }
-        const dayVal = val === '' ? null : parseInt(val);
-        await assignQDay(wk.id, q, dayVal);
-      }
+      const dayVal = (val === '' || val === NAY_VAL) ? null : parseInt(val);
+      await assignQDay(wk.id, q, dayVal);
       rerenderOpenWeek();
     });
   });
@@ -611,7 +584,7 @@ function buildCalGrid(wk, wStart, wDays, dailyMap) {
   loadOverRow.className = 'acr-row';
   const loLabel = document.createElement('td');
   loLabel.className = 'rl';
-  loLabel.innerHTML = `<span class="tip-text" data-tip="How far today's miles are from the healthy zone. Blue chip = below minimum. Dash = in zone. Red chip = over maximum.">ACR Load Overage</span>`;
+  loLabel.innerHTML = `<span class="tip-text" data-tip="How far today's miles are from the healthy zone. Blue = below minimum. Gray = in zone (value shows headroom to max). Red = over maximum.">Overage</span>`;
   loadOverRow.appendChild(loLabel);
 
   for (let d = 0; d < 7; d++) {
@@ -822,8 +795,11 @@ function renderLoadOverCell(td, todayMi, lmax, lmin) {
     chip.title = `You're ${deficit} miles below the minimum recommended load for today. Running ${deficit} more miles would bring you to the low end of the healthy training zone. Extended time below 80% load risks detraining.`;
     td.appendChild(chip);
   } else {
-    td.style.color = '#ccc';
-    td.textContent = '—';
+    // In zone — show headroom to max in gray
+    const headroom = roundMi(lmax - todayMi);
+    td.style.color = '#bbb';
+    td.style.fontWeight = '';
+    td.textContent = headroom > 0 ? `−${headroom}` : '0';
   }
 }
 

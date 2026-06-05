@@ -573,7 +573,7 @@ body {
 /* Separator before Total + ACR rows */
 .tot-row td { border-top: 2px solid var(--cool-border) !important; }
 .tot-row td {
-  background: #fff !important;
+  background: #eef2f8 !important;
   font-size: 12px;
   font-weight: 400;
   color: var(--text-secondary);
